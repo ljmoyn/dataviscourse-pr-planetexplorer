@@ -1,11 +1,24 @@
 #view-wrapper {
-    overflow-x: scroll;
-    overflow-y: hidden;
-    white-space: nowrap;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
 }
 
 .view {
-    padding: 0.5em;
-    display: inline-block;
-    vertical-align: top;
+  padding: 0.5em;
+  display: inline-block;
+  vertical-align: top;
+}
+
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 200px;
+  height: 100px;
+  padding: 2px;
+  font: 18px sans-serif;
+  background: lightblue;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
 }
