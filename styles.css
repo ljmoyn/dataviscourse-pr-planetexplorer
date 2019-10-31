@@ -1,0 +1,11 @@
+#view-wrapper {
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.view {
+    padding: 0.5em;
+    display: inline-block;
+    vertical-align: top;
+}
