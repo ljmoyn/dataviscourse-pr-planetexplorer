@@ -114,7 +114,7 @@ class Scatterplot {
           .style("top", d3.event.pageY - 28 + "px");
         d3.select(this)
           .attr("stroke", "black")
-          .attr("r");
+          .attr("r", 3);
       })
       .on("mouseout", function(d) {
         div
@@ -123,7 +123,7 @@ class Scatterplot {
           .style("opacity", 0);
         d3.select(this)
           .attr("stroke", "#69b3a2")
-          .attr("stroke-width", 1);
+          .attr("r", 1.2);
       });
   }
 }
