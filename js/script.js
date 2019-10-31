@@ -12,6 +12,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     };
   });
 
+  let parallelAxes = new ParallelAxes(data);
+
   let scatterplot = new Scatterplot(data);
   scatterplot.createScatterplot();
 
@@ -50,7 +52,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         break;
       case "Eclipse Timing Variations":
         result.description =
-          'When a binary star system is aligned such that – from the Earth\'s point of view – the stars pass in front of each other in their orbits, the system is called an "eclipsing binary" star system. The time of minimum light, when the star with the brighter surface is at least partially obscured by the disc of the other star, is called the primary eclipse, and approximately half an orbit later, the secondary eclipse occurs when the brighter surface area star obscures some portion of the other star. These times of minimum light, or central eclipses, constitute a time stamp on the system, much like the pulses from a pulsar (except that rather than a flash, they are a dip in brightness). If there is a planet in circumbinary orbit around the binary stars, the stars will be offset around a binary-planet center of mass. As the stars in the binary are displaced back and forth by the planet, the times of the eclipse minima will vary. The periodicity of this offset may be the most reliable way to detect extrasolar planets around close binary systems.[48][49][50] With this method, planets are more easily detectable if they are more massive, orbit relatively closely around the system, and if the stars have low masses.';
+          "When a binary star system is aligned such that – from the Earth\'s point of view – the stars pass in front of each other in their orbits, the system is called an \"eclipsing binary\" star system. The time of minimum light, when the star with the brighter surface is at least partially obscured by the disc of the other star, is called the primary eclipse, and approximately half an orbit later, the secondary eclipse occurs when the brighter surface area star obscures some portion of the other star. These times of minimum light, or central eclipses, constitute a time stamp on the system, much like the pulses from a pulsar (except that rather than a flash, they are a dip in brightness). If there is a planet in circumbinary orbit around the binary stars, the stars will be offset around a binary-planet center of mass. As the stars in the binary are displaced back and forth by the planet, the times of the eclipse minima will vary. The periodicity of this offset may be the most reliable way to detect extrasolar planets around close binary systems. With this method, planets are more easily detectable if they are more massive, orbit relatively closely around the system, and if the stars have low masses.";
         result.source =
           "https://en.wikipedia.org/wiki/Methods_of_detecting_exoplanets#Eclipsing_binary_minima_timing";
         break;
