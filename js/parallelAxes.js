@@ -23,6 +23,9 @@ class ParallelAxes {
       return k !== "name" && k !== "facility" && k !== "discoveryMethod" && k !== "lastUpdate"
     });
 
+    this.selectedX = "distance";
+    this.selectedY = "mass";
+
     this.xScale.domain(this.dimensions);
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
     for (let i = 0; i < this.dimensions.length; i++) {
@@ -71,9 +74,16 @@ class ParallelAxes {
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
-          .html("<button type=\"button\">Set Y</button>")
+          .append("button")
+          .attr("type","button")
+          .classed("buttonY",true)
+          .classed("selectedButton", self.selectedY === dimension)
+          .html("Set Y")
           .on("click", function(){
+              self.selectedY = dimension;
               self.updateScatterAxes(null, dimension)
+              self.svg.selectAll(".buttonY").classed("selectedButton", false)
+              d3.select(this).classed("selectedButton", true)
           });
         d3.select(this).append("foreignObject")
           .attr("y", -55)
@@ -81,11 +91,23 @@ class ParallelAxes {
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
-          .html("<button type=\"button\">Set X</button>")
+          .append("button")
+          .attr("type","button")
+          .classed("buttonX",true)
+          .classed("selectedButton", self.selectedX === dimension)
+          .html("Set X")
           .on("click", function(){
+              self.selectedX = dimension;
               self.updateScatterAxes(dimension)
+              self.svg.selectAll(".buttonX").classed("selectedButton", false)
+              d3.select(this).classed("selectedButton", true)
           });
       })
+  }
+
+  update(){
+
+
   }
 
   getPath(datum) {

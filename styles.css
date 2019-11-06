@@ -28,3 +28,8 @@ div.tooltip {
   stroke: steelblue;
    stroke-opacity: .7;
 }
+
+.selectedButton {
+    background-color: lightblue;
+    border-color: black;
+}
