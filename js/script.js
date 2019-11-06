@@ -1,29 +1,42 @@
 d3.csv("data/confirmed-planets.csv").then(rawData => {
-  data = rawData.map(function(d) {
-    return {
-      id: Number(d.loc_rowid),
-      mass: Number(d.pl_bmassj),
-      discoveryMethod: d.pl_discmethod,
-      facility: d.pl_facility,
-      name: d.pl_name,
-      radius: Number(d.pl_radj),
-      lastUpdate: d.rowupdate,
-      distance: Number(d.st_dist)
-    };
-  });
+  d3.json('data/discoveryMethods.json').then(discoveryMethods => {
 
-  let scatterplot = new Scatterplot(data);
-  scatterplot.createScatterplot();
+    data = rawData.map(function(d) {
+      return {
+        id: Number(d.loc_rowid),
+        mass: Number(d.pl_bmassj),
+        discoveryMethod: d.pl_discmethod,
+        facility: d.pl_facility,
+        name: d.pl_name,
+        radius: Number(d.pl_radj),
+        lastUpdate: d.rowupdate,
+        distance: Number(d.st_dist)
+      };
+    });
 
-  let updateScatterAxes = function(selectedX, selectedY) {
-      if(selectedX)
+    let scatterplot = new Scatterplot(data);
+    scatterplot.createScatterplot();
+
+    let updateScatterAxes = function(selectedX, selectedY) {
+      if (selectedX)
         scatterplot.selectedX = selectedX;
-      if(selectedY)
+      if (selectedY)
         scatterplot.selectedY = selectedY
 
       scatterplot.updateScatterplot();
-  }
-  let parallelAxes = new ParallelAxes(data, updateScatterAxes);
+    }
+    let parallelAxes = new ParallelAxes(data, updateScatterAxes);
+
+    //GenerateDiscoveryMethodsJSON(data);
+
+    let facilities = data.map(d => d.facility);
+    facilities = facilities.filter(
+      (facility, index) => facilities.indexOf(facility) === index
+    );
+  })
+});
+
+function GenerateDiscoveryMethodsJSON(data) {
   let discoveryMethods = data.map(d => d.discoveryMethod);
   discoveryMethods = discoveryMethods.filter(
     (method, index) => discoveryMethods.indexOf(method) === index
@@ -111,8 +124,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     }
     return result;
   });
-  let facilities = data.map(d => d.facility);
-  facilities = facilities.filter(
-    (facility, index) => facilities.indexOf(facility) === index
-  );
-});
+
+  //just break after this line and copy string from browser debugger;
+  stringJSON = JSON.stringify(discoveryMethods)
+}
