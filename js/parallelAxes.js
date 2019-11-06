@@ -77,7 +77,7 @@ class ParallelAxes {
           .text(dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : ""));
         d3.select(this).append("foreignObject")
           .attr("y", -30)
-          .attr("x", -25)
+          .attr("x", -22)
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
@@ -98,7 +98,7 @@ class ParallelAxes {
           });
         d3.select(this).append("foreignObject")
           .attr("y", -55)
-          .attr("x", -25)
+          .attr("x", -22)
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
