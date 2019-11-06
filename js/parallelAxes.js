@@ -1,8 +1,8 @@
 class ParallelAxes {
 
-  constructor(data) {
+  constructor(data, updateScatterAxes) {
     this.data = data.slice(0, 10);
-
+    this.updateScatterAxes = updateScatterAxes;
     this.margin = {
       top: 80,
       right: 20,
@@ -53,9 +53,9 @@ class ParallelAxes {
       .attr("transform", function(d) {
         return "translate(" + self.xScale(d) + "," + self.margin.top + ")";
       })
-      .each(function(d) {
+      .each(function(dimension) {
         //add axis to the group
-        d3.select(this).call(d3.axisLeft(self.yScales[d]));
+        d3.select(this).call(d3.axisLeft(self.yScales[dimension]));
 
         //add axis label at top
         d3.select(this).append("text")
@@ -71,14 +71,20 @@ class ParallelAxes {
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
-          .html("<button type=\"button\">Set Y</button>");
+          .html("<button type=\"button\">Set Y</button>")
+          .on("click", function(){
+              self.updateScatterAxes(null, dimension)
+          });
         d3.select(this).append("foreignObject")
           .attr("y", -55)
           .attr("x", -25)
           .attr("width", 50)
           .attr("height", 25)
           .append("xhtml:div")
-          .html("<button type=\"button\">Set X</button>");
+          .html("<button type=\"button\">Set X</button>")
+          .on("click", function(){
+              self.updateScatterAxes(dimension)
+          });
       })
   }
 

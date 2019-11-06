@@ -8,9 +8,9 @@ class Scatterplot {
 
   createScatterplot() {
     // set the dimensions and margins of the graph
-    (this.margin = { top: 10, right: 20, bottom: 50, left: 60 }),
-      (this.width = 460 - this.margin.left - this.margin.right),
-      (this.height = 460 - this.margin.top - this.margin.bottom);
+    this.margin = { top: 10, right: 20, bottom: 50, left: 60 }
+    this.width = 400;
+    this.height = 400;
 
     // append the svg object to the body of the page
     this.svg = d3
@@ -23,28 +23,49 @@ class Scatterplot {
         "translate(" + this.margin.left + "," + this.margin.top + ")"
       );
 
-    this.updateScatterplot();
-  }
+    this.pointGroup = this.svg.append("g");
 
-  updateScatterplot() {
+    this.selectedX = "distance";
+    this.selectedY = "mass";
+
     // Find max x value for scale
-    let xMax = d3.max(this.data.map(d => d.distance));
+    let xMax = d3.max(this.data.map(d => d[this.selectedX]));
 
     // Find max y value for scale
-    let yMax = d3.max(this.data.map(d => d.mass));
+    let yMax = d3.max(this.data.map(d => d[this.selectedY]));
 
-    // Add X axis
-    // x-axis is planet distance
-    let x = d3
+    // Add Y axis
+    this.yScale = d3
+      .scaleLinear()
+      .domain([0, yMax])
+      .range([this.height, 0]);
+    this.svg
+      .append("g")
+      .attr("id", "yAxis")
+      .call(d3.axisLeft(this.yScale));
+    this.svg
+      .append("text")
+      .attr("id","yLabel")
+      .attr(
+        "transform",
+        "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
+      )
+      .style("text-anchor", "middle")
+      .text(this.selectedY);
+
+      //Add x axis
+      this.xScale = d3
       .scaleLinear()
       .domain([0, xMax])
       .range([0, this.width]);
-    this.svg
+      this.svg
       .append("g")
+      .attr("id", "xAxis")
       .attr("transform", "translate(0," + this.height + ")")
-      .call(d3.axisBottom(x));
-    this.svg
+      .call(d3.axisBottom(this.xScale));
+      this.svg
       .append("text")
+      .attr("id", "xLabel")
       .attr(
         "transform",
         "translate(" +
@@ -54,26 +75,26 @@ class Scatterplot {
           ")"
       )
       .style("text-anchor", "middle")
-      .text("Distance (parsecs)");
+      .text(this.selectedX);
 
-    // Add Y axis
-    // y-axis is planet mass
-    let y = d3
-      .scaleLinear()
-      .domain([0, yMax])
-      .range([this.height, 0]);
-    this.svg
-      .append("g")
-      .text("Mass")
-      .call(d3.axisLeft(y));
-    this.svg
-      .append("text")
-      .attr(
-        "transform",
-        "translate(-25" + " ," + this.height / 2 + ") " + "rotate(-90)"
-      )
-      .style("text-anchor", "middle")
-      .text("Mass (Jupiter Mass)");
+      this.updateScatterplot();
+
+  }
+
+  updateScatterplot() {
+    // Find max x value for scale
+    let xMax = d3.max(this.data.map(d => d[this.selectedX]));
+
+    // Find max y value for scale
+    let yMax = d3.max(this.data.map(d => d[this.selectedY]));
+
+    this.xScale.domain([0, xMax])
+    d3.select("#xAxis").call(d3.axisBottom(this.xScale));
+    d3.select("#xLabel").text(this.selectedX)
+
+    this.yScale.domain([0, yMax])
+    d3.select("#yAxis").call(d3.axisLeft(this.yScale));
+    d3.select("#yLabel").text(this.selectedY)
 
     // Initiate hover
     let div = d3
@@ -82,15 +103,18 @@ class Scatterplot {
       .attr("class", "tooltip")
       .style("opacity", 0);
 
-    // Add dots
-    this.svg
-      .append("g")
+    let plotPoints = this.pointGroup
       .selectAll("circle")
       .data(this.data)
-      .enter()
+      //update positions of existing dots
+      .attr("cx", d => this.xScale(d[this.selectedX]))
+      .attr("cy", d => this.yScale(d[this.selectedY]))
+
+     // Add dots
+     plotPoints.enter()
       .append("circle")
-      .attr("cx", d => x(d.distance))
-      .attr("cy", d => y(d.mass))
+      .attr("cx", d => this.xScale(d[this.selectedX]))
+      .attr("cy", d => this.yScale(d[this.selectedY]))
       .attr("stroke", "#69b3a2")
       .attr("stroke-width", 1)
       .attr("r", 1.2)
@@ -125,5 +149,7 @@ class Scatterplot {
           .attr("stroke", "#69b3a2")
           .attr("r", 1.2);
       });
+
+      plotPoints.exit().remove()
   }
 }

@@ -12,11 +12,18 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     };
   });
 
-  let parallelAxes = new ParallelAxes(data);
-
   let scatterplot = new Scatterplot(data);
   scatterplot.createScatterplot();
 
+  let updateScatterAxes = function(selectedX, selectedY) {
+      if(selectedX)
+        scatterplot.selectedX = selectedX;
+      if(selectedY)
+        scatterplot.selectedY = selectedY
+
+      scatterplot.updateScatterplot();
+  }
+  let parallelAxes = new ParallelAxes(data, updateScatterAxes);
   let discoveryMethods = data.map(d => d.discoveryMethod);
   discoveryMethods = discoveryMethods.filter(
     (method, index) => discoveryMethods.indexOf(method) === index
