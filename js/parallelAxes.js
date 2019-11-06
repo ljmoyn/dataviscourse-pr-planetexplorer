@@ -4,7 +4,7 @@ class ParallelAxes {
     this.data = data.slice(0, 10);
 
     this.margin = {
-      top: 35,
+      top: 80,
       right: 20,
       bottom: 35,
       left: 20
@@ -25,19 +25,17 @@ class ParallelAxes {
 
     this.xScale.domain(this.dimensions);
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
-    let self = this;
-    this.dimensions.forEach(function(dimension) {
-      let values = self.data.map(function(datum) {
+    for (let i = 0; i < this.dimensions.length; i++) {
+      let dimension = this.dimensions[i];
+      let values = this.data.map(function(datum) {
         return datum[dimension];
       });
-      self.yScales[dimension] = d3.scaleLinear()
-        .domain(d3.extent(self.data, function(datum) {
+      this.yScales[dimension] = d3.scaleLinear()
+        .domain(d3.extent(this.data, function(datum) {
           return +datum[dimension];
         }))
-        .range([self.height, 0])
-
-
-    })
+        .range([this.height, 0])
+    }
 
     this.linesGroup = this.svg.append("g")
       .attr("class", "linesGroup")
@@ -45,12 +43,9 @@ class ParallelAxes {
       .selectAll("path")
       .data(this.data)
       .enter().append("path")
-      .attr("d", function(datum) {
-        return d3.line()(self.dimensions.map(function(dimension) {
-          return [self.xScale(dimension), self.yScales[dimension](datum[dimension])];
-        }))
-      })
+      .attr("d", this.getPath.bind(this));
 
+    let self = this;
     this.svg.selectAll(".dimension")
       .data(this.dimensions)
       .enter().append("g")
@@ -59,14 +54,38 @@ class ParallelAxes {
         return "translate(" + self.xScale(d) + "," + self.margin.top + ")";
       })
       .each(function(d) {
+        //add axis to the group
         d3.select(this).call(d3.axisLeft(self.yScales[d]));
+
+        //add axis label at top
         d3.select(this).append("text")
           .attr("fill", "black")
           .style("text-anchor", "middle")
-          .attr("y", -9)
+          .attr("y", -65)
           .text(function(d) {
             return d;
           });
+        d3.select(this).append("foreignObject")
+          .attr("y", -30)
+          .attr("x", -25)
+          .attr("width", 50)
+          .attr("height", 25)
+          .append("xhtml:div")
+          .html("<button type=\"button\">Set Y</button>");
+        d3.select(this).append("foreignObject")
+          .attr("y", -55)
+          .attr("x", -25)
+          .attr("width", 50)
+          .attr("height", 25)
+          .append("xhtml:div")
+          .html("<button type=\"button\">Set X</button>");
       })
+  }
+
+  getPath(datum) {
+    let self = this;
+    return d3.line()(this.dimensions.map(function(dimension) {
+      return [self.xScale(dimension), self.yScales[dimension](datum[dimension])];
+    }))
   }
 }
