@@ -136,10 +136,10 @@ class Scatterplot {
         div
           .html(
             "<h5> Name: " +
-              d.name +
+              d.name.value +
               "</h5>" +
               "<h5> Facility: " +
-              d.facility +
+              d.facility.value +
               "</h5>"
           )
           .style("left", d3.event.pageX + 28 + "px")
