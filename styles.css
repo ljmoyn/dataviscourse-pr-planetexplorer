@@ -22,3 +22,9 @@ div.tooltip {
   border-radius: 8px;
   pointer-events: none;
 }
+
+.linesGroup path {
+  fill: none !important;
+  stroke: steelblue;
+   stroke-opacity: .7;
+}
