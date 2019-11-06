@@ -25,14 +25,22 @@ class Scatterplot {
 
     this.pointGroup = this.svg.append("g");
 
-    this.selectedX = "distance";
-    this.selectedY = "mass";
+    this.selectedX = {
+        id:"distance",
+      name: "Distance",
+      unit: "Parsecs"
+    };
+    this.selectedY = {
+        id: "mass",
+      name: "Mass",
+      unit: "Jupiter Masses"
+    };
 
     // Find max x value for scale
-    let xMax = d3.max(this.data.map(d => d[this.selectedX]));
+    let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
 
     // Find max y value for scale
-    let yMax = d3.max(this.data.map(d => d[this.selectedY]));
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
 
     // Add Y axis
     this.yScale = d3
@@ -51,7 +59,7 @@ class Scatterplot {
         "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
       )
       .style("text-anchor", "middle")
-      .text(this.selectedY);
+      .text(this.selectedY.name + (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : ""));
 
       //Add x axis
       this.xScale = d3
@@ -75,7 +83,7 @@ class Scatterplot {
           ")"
       )
       .style("text-anchor", "middle")
-      .text(this.selectedX);
+      .text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""));
 
       this.updateScatterplot();
 
@@ -83,18 +91,18 @@ class Scatterplot {
 
   updateScatterplot() {
     // Find max x value for scale
-    let xMax = d3.max(this.data.map(d => d[this.selectedX]));
+    let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
 
     // Find max y value for scale
-    let yMax = d3.max(this.data.map(d => d[this.selectedY]));
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
 
     this.xScale.domain([0, xMax])
     d3.select("#xAxis").call(d3.axisBottom(this.xScale));
-    d3.select("#xLabel").text(this.selectedX)
+    d3.select("#xLabel").text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""))
 
     this.yScale.domain([0, yMax])
     d3.select("#yAxis").call(d3.axisLeft(this.yScale));
-    d3.select("#yLabel").text(this.selectedY)
+    d3.select("#yLabel").text(this.selectedY.name + (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : ""))
 
     // Initiate hover
     let div = d3
@@ -107,14 +115,14 @@ class Scatterplot {
       .selectAll("circle")
       .data(this.data)
       //update positions of existing dots
-      .attr("cx", d => this.xScale(d[this.selectedX]))
-      .attr("cy", d => this.yScale(d[this.selectedY]))
+      .attr("cx", d => this.xScale(d[this.selectedX.id].value))
+      .attr("cy", d => this.yScale(d[this.selectedY.id].value))
 
      // Add dots
      plotPoints.enter()
       .append("circle")
-      .attr("cx", d => this.xScale(d[this.selectedX]))
-      .attr("cy", d => this.yScale(d[this.selectedY]))
+      .attr("cx", d => this.xScale(d[this.selectedX.id].value))
+      .attr("cy", d => this.yScale(d[this.selectedY.id].value))
       .attr("stroke", "#69b3a2")
       .attr("stroke-width", 1)
       .attr("r", 1.2)

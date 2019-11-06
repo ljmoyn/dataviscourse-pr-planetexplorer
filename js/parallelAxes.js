@@ -23,8 +23,16 @@ class ParallelAxes {
       return k !== "name" && k !== "facility" && k !== "discoveryMethod" && k !== "lastUpdate"
     });
 
-    this.selectedX = "distance";
-    this.selectedY = "mass";
+    this.selectedX = {
+        id:"distance",
+      name: "Distance",
+      unit: "Parsecs"
+    };
+    this.selectedY = {
+        id: "mass",
+      name: "Mass",
+      unit: "Jupiter Masses"
+    };
 
     this.xScale.domain(this.dimensions);
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
@@ -35,7 +43,7 @@ class ParallelAxes {
       });
       this.yScales[dimension] = d3.scaleLinear()
         .domain(d3.extent(this.data, function(datum) {
-          return +datum[dimension];
+          return +datum[dimension].value;
         }))
         .range([this.height, 0])
     }
@@ -59,15 +67,14 @@ class ParallelAxes {
       .each(function(dimension) {
         //add axis to the group
         d3.select(this).call(d3.axisLeft(self.yScales[dimension]));
-
+        let dimensionUnit = self.data[0][dimension].unit;
+        let dimensionName = dimension.charAt(0).toUpperCase() + dimension.slice(1)
         //add axis label at top
         d3.select(this).append("text")
           .attr("fill", "black")
           .style("text-anchor", "middle")
           .attr("y", -65)
-          .text(function(d) {
-            return d;
-          });
+          .text(dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : ""));
         d3.select(this).append("foreignObject")
           .attr("y", -30)
           .attr("x", -25)
@@ -75,15 +82,19 @@ class ParallelAxes {
           .attr("height", 25)
           .append("xhtml:div")
           .append("button")
-          .attr("type","button")
-          .classed("buttonY",true)
-          .classed("selectedButton", self.selectedY === dimension)
+          .attr("type", "button")
+          .classed("buttonY", true)
+          .classed("selectedButton", self.selectedY.id === dimension)
           .html("Set Y")
-          .on("click", function(){
-              self.selectedY = dimension;
-              self.updateScatterAxes(null, dimension)
-              self.svg.selectAll(".buttonY").classed("selectedButton", false)
-              d3.select(this).classed("selectedButton", true)
+          .on("click", function() {
+            self.selectedY = {
+              id: dimension,
+              name: dimensionName,
+              unit: dimensionUnit
+            };
+            self.updateScatterAxes(null, self.selectedY)
+            self.svg.selectAll(".buttonY").classed("selectedButton", false)
+            d3.select(this).classed("selectedButton", true)
           });
         d3.select(this).append("foreignObject")
           .attr("y", -55)
@@ -92,20 +103,24 @@ class ParallelAxes {
           .attr("height", 25)
           .append("xhtml:div")
           .append("button")
-          .attr("type","button")
-          .classed("buttonX",true)
-          .classed("selectedButton", self.selectedX === dimension)
+          .attr("type", "button")
+          .classed("buttonX", true)
+          .classed("selectedButton", self.selectedX.id === dimension)
           .html("Set X")
-          .on("click", function(){
-              self.selectedX = dimension;
-              self.updateScatterAxes(dimension)
-              self.svg.selectAll(".buttonX").classed("selectedButton", false)
-              d3.select(this).classed("selectedButton", true)
+          .on("click", function() {
+            self.selectedX = {
+              id: dimension,
+              name: dimensionName,
+              unit: dimensionUnit
+            }
+            self.updateScatterAxes(self.selectedX)
+            self.svg.selectAll(".buttonX").classed("selectedButton", false)
+            d3.select(this).classed("selectedButton", true)
           });
       })
   }
 
-  update(){
+  update() {
 
 
   }
@@ -113,7 +128,7 @@ class ParallelAxes {
   getPath(datum) {
     let self = this;
     return d3.line()(this.dimensions.map(function(dimension) {
-      return [self.xScale(dimension), self.yScales[dimension](datum[dimension])];
+      return [self.xScale(dimension), self.yScales[dimension](datum[dimension].value)];
     }))
   }
 }

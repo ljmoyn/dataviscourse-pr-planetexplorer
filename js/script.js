@@ -3,14 +3,33 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
     data = rawData.map(function(d) {
       return {
-        id: Number(d.loc_rowid),
-        mass: Number(d.pl_bmassj),
-        discoveryMethod: d.pl_discmethod,
-        facility: d.pl_facility,
-        name: d.pl_name,
-        radius: Number(d.pl_radj),
-        lastUpdate: d.rowupdate,
-        distance: Number(d.st_dist)
+        id: {
+          value: Number(d.loc_rowid)
+        },
+        mass: {
+          value: Number(d.pl_bmassj),
+          unit: "Jupiter Masses"
+        },
+        discoveryMethod: {
+          value: d.pl_discmethod
+        },
+        facility: {
+          value: d.pl_facility
+        },
+        name: {
+          value: d.pl_name
+        },
+        radius: {
+          value: Number(d.pl_radj),
+          unit: "Jupiter Radius"
+        },
+        lastUpdate: {
+          value: d.rowupdate
+        },
+        distance: {
+          value: Number(d.st_dist),
+          unit: "Parsecs"
+        }
       };
     });
 
