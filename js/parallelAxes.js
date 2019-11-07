@@ -1,7 +1,7 @@
 class ParallelAxes {
 
   constructor(data, updateScatterAxes) {
-    this.data = data.slice(0, 10);
+    this.data = data;
     this.updateScatterAxes = updateScatterAxes;
     this.margin = {
       top: 80,
@@ -20,8 +20,9 @@ class ParallelAxes {
     this.yScales = {};
 
     this.dimensions = d3.keys(this.data[0]).filter(function(k) {
-      return k !== "name" && k !== "facility" && k !== "discoveryMethod" && k !== "lastUpdate"
+      return k !== "name" && k !== "facility" && k !== "lastUpdate"
     });
+    this.dimensions.sort()
 
     this.selectedX = {
         id:"distance",
@@ -41,11 +42,27 @@ class ParallelAxes {
       let values = this.data.map(function(datum) {
         return datum[dimension];
       });
-      this.yScales[dimension] = d3.scaleLinear()
-        .domain(d3.extent(this.data, function(datum) {
-          return +datum[dimension].value;
-        }))
-        .range([this.height, 0])
+
+      if(values.some(v => isNaN(v.value)))
+      {
+          let uniqueValues = values.map(v => v.value);
+          uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
+          uniqueValues.sort();
+
+        this.yScales[dimension] = d3.scalePoint()
+                   .domain(uniqueValues)
+                   .range([this.height, 0],1);
+
+      }
+      else
+      {
+          this.yScales[dimension] = d3.scaleLinear()
+            .domain(d3.extent(this.data, function(datum) {
+              return +datum[dimension].value;
+            }))
+            .range([this.height, 0])
+      }
+
     }
 
     this.linesGroup = this.svg.append("g")

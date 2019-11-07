@@ -86,21 +86,50 @@ class Scatterplot {
       .text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""));
 
       this.updateScatterplot();
-
   }
 
   updateScatterplot() {
     // Find max x value for scale
-    let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
 
+    let values = this.data.map(datum => datum[this.selectedX.id]);
     // Find max y value for scale
-    let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
+    if(values.some(v => isNaN(v.value)))
+    {
+        let uniqueValues = values.map(v => v.value);
+        uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
+        uniqueValues.sort();
 
-    this.xScale.domain([0, xMax])
+        this.xScale = d3.scalePoint()
+                   .domain(uniqueValues)
+                   .range([0,this.width]);
+    }
+    else
+    {
+        let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
+        this.xScale = d3.scaleLinear()
+                   .domain([0, xMax])
+                   .range([0, this.width]);
+    }
     d3.select("#xAxis").call(d3.axisBottom(this.xScale));
     d3.select("#xLabel").text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""))
 
-    this.yScale.domain([0, yMax])
+    values = this.data.map(datum => datum[this.selectedY.id]);
+    if(values.some(v => isNaN(v.value)))
+    {
+        let uniqueValues = values.map(v => v.value);
+        uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
+        uniqueValues.sort();
+
+        this.yScale = d3.scalePoint()
+                   .domain(uniqueValues)
+                   .range([this.height, 0]);
+    }
+    else{
+        let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
+        this.yScale = d3.scaleLinear()
+                   .domain([0, yMax])
+                   .range([this.height, 0]);
+    }
     d3.select("#yAxis").call(d3.axisLeft(this.yScale));
     d3.select("#yLabel").text(this.selectedY.name + (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : ""))
 
@@ -114,6 +143,9 @@ class Scatterplot {
     let plotPoints = this.pointGroup
       .selectAll("circle")
       .data(this.data)
+
+    plotPoints.transition()
+      .duration(3000)
       //update positions of existing dots
       .attr("cx", d => this.xScale(d[this.selectedX.id].value))
       .attr("cy", d => this.yScale(d[this.selectedY.id].value))
