@@ -16,53 +16,51 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
 
-    this.xScale = d3.scalePoint().rangeRound([0, this.width]).padding(1);
-    this.yScales = {};
-
     this.dimensions = d3.keys(this.data[0]).filter(function(k) {
       return k !== "name" && k !== "facility" && k !== "lastUpdate"
     });
     this.dimensions.sort()
 
     this.selectedX = {
-        id:"distance",
+      id: "distance",
       name: "Distance",
       unit: "Parsecs"
     };
     this.selectedY = {
-        id: "mass",
+      id: "mass",
       name: "Mass",
       unit: "Jupiter Masses"
     };
 
-    this.xScale.domain(this.dimensions);
+    this.xScale = d3.scalePoint().domain(this.dimensions).rangeRound([0, this.width]).padding(1);
+    this.yScales = {};
+
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
+    //initialize yScales, which is an object containing scales for each dimension
     for (let i = 0; i < this.dimensions.length; i++) {
       let dimension = this.dimensions[i];
       let values = this.data.map(function(datum) {
         return datum[dimension];
       });
-
-      if(values.some(v => isNaN(v.value)))
-      {
-          let uniqueValues = values.map(v => v.value);
-          uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
-          uniqueValues.sort();
+      //non-numerical data needs a different type of scale
+      if (values.some(v => isNaN(v.value))) {
+        let uniqueValues = values.map(v => v.value);
+        uniqueValues = uniqueValues.filter(function(v, i) {
+          return uniqueValues.indexOf(v) == i;
+        });
+        uniqueValues.sort();
 
         this.yScales[dimension] = d3.scalePoint()
-                   .domain(uniqueValues)
-                   .range([this.height, 0],1);
+          .domain(uniqueValues)
+          .range([this.height, 0], 1);
 
+      } else {
+        this.yScales[dimension] = d3.scaleLinear()
+          .domain(d3.extent(this.data, function(datum) {
+            return +datum[dimension].value;
+          }))
+          .range([this.height, 0])
       }
-      else
-      {
-          this.yScales[dimension] = d3.scaleLinear()
-            .domain(d3.extent(this.data, function(datum) {
-              return +datum[dimension].value;
-            }))
-            .range([this.height, 0])
-      }
-
     }
 
     this.linesGroup = this.svg.append("g")
@@ -73,15 +71,18 @@ class ParallelAxes {
       .enter().append("path")
       .attr("d", this.getPath.bind(this));
 
+    this.dimensionGroups = this.svg.selectAll(".dimension").data(this.dimensions);
     let self = this;
-    this.svg.selectAll(".dimension")
-      .data(this.dimensions)
-      .enter().append("g")
+    this.createDragEvents();
+    this.dimensionGroups.enter().append("g")
       .attr("class", "dimension axis")
       .attr("transform", function(d) {
         return "translate(" + self.xScale(d) + "," + self.margin.top + ")";
       })
+      //apply drag events to the groups
+      .call(this.dragEvents)
       .each(function(dimension) {
+
         //add axis to the group
         d3.select(this).call(d3.axisLeft(self.yScales[dimension]));
         let dimensionUnit = self.data[0][dimension].unit;
@@ -92,6 +93,7 @@ class ParallelAxes {
           .style("text-anchor", "middle")
           .attr("y", -65)
           .text(dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : ""));
+        //add Y button
         d3.select(this).append("foreignObject")
           .attr("y", -30)
           .attr("x", -22)
@@ -113,6 +115,7 @@ class ParallelAxes {
             self.svg.selectAll(".buttonY").classed("selectedButton", false)
             d3.select(this).classed("selectedButton", true)
           });
+        //add X button
         d3.select(this).append("foreignObject")
           .attr("y", -55)
           .attr("x", -22)
@@ -145,7 +148,51 @@ class ParallelAxes {
   getPath(datum) {
     let self = this;
     return d3.line()(this.dimensions.map(function(dimension) {
-      return [self.xScale(dimension), self.yScales[dimension](datum[dimension].value)];
+      return [self.getPosition(dimension), self.yScales[dimension](datum[dimension].value)];
     }))
+  }
+
+  getPosition(dimension) {
+    //if the axis is being dragged, use that position rather than one from the xScale
+    let dragPosition = this.dragging ? this.dragging[dimension] : null;
+    return !dragPosition ? this.xScale(dimension) : dragPosition;
+  }
+
+  //based on https://bl.ocks.org/jasondavies/1341281
+  createDragEvents() {
+    let self = this;
+    this.dragging = {};
+    this.dragEvents = d3.drag()
+      .on("start", function(dimension) {
+        //store the current "correct" position of grabbed axis
+        self.dragging[dimension] = self.xScale(dimension);
+      })
+      .on("drag", function(dimension) {
+        //get latest moved position of grabbed axis
+        self.dragging[dimension] = Math.min(self.width, Math.max(0, d3.event.x));
+
+        //reorder axes if the grabbed axis has moved far enough to displace another One
+        //Note: getPosition uses this.dragging
+        self.dimensions.sort(function(a, b) {
+          return self.getPosition(a) - self.getPosition(b);
+        });
+        //update xScale now that order might have changed
+        self.xScale.domain(self.dimensions);
+
+        //update axis positions using new xScale
+        d3.selectAll(".dimension").attr("transform", function(dim) {
+          return "translate(" + self.getPosition(dim) + "," + self.margin.top + ")";
+        })
+
+        //update lines to follow the moving axis
+        self.linesGroup.attr("d", self.getPath.bind(self));
+      })
+      .on("end", function(dimension) {
+        delete self.dragging[dimension];
+
+        //bounce axis/lines back to the nearest "standard" position, to preserve equal spacing
+        d3.select(this).transition().duration(300).attr("transform", "translate(" + self.xScale(dimension) + "," + self.margin.top + ")")
+        self.linesGroup.transition().duration(300).attr("d", self.getPath.bind(self));
+      })
   }
 }

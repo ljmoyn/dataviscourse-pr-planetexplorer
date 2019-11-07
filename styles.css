@@ -26,10 +26,14 @@ div.tooltip {
 .linesGroup path {
   fill: none !important;
   stroke: steelblue;
-   stroke-opacity: .7;
+  stroke-opacity: .7;
 }
 
 .selectedButton {
-    background-color: lightblue;
-    border-color: black;
+  background-color: lightblue;
+  border-color: black;
+}
+
+.dimension, .axis, .dimension text, .dimension path, .dimension g {
+  cursor: grab;
 }
