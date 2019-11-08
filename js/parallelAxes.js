@@ -16,8 +16,8 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom)
 
-    this.dimensions = d3.keys(this.data[0]).filter(function(k) {
-      return k !== "name" && k !== "facility" && k !== "lastUpdate"
+    this.dimensions = d3.keys(this.data[0]).filter(function(dimension) {
+      return dimension !== "name" && dimension !== "id" && dimension !== "lastUpdate"
     });
     this.dimensions.sort()
 
@@ -37,6 +37,7 @@ class ParallelAxes {
 
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
     //initialize yScales, which is an object containing scales for each dimension
+    let self = this;
     for (let i = 0; i < this.dimensions.length; i++) {
       let dimension = this.dimensions[i];
       let values = this.data.map(function(datum) {
@@ -48,8 +49,26 @@ class ParallelAxes {
         uniqueValues = uniqueValues.filter(function(v, i) {
           return uniqueValues.indexOf(v) == i;
         });
-        uniqueValues.sort();
+        if(dimension === "facility" || dimension === "discoveryMethod"){
+          uniqueValues.sort(function(a,b){
+            let aCount = 0;
+            let bCount = 0;
+            for(let i = 0; i < self.data.length; i++){
+              if(self.data[i][dimension].value === a)
+                aCount++;
+              if(self.data[i][dimension].value === b)
+                bCount++;
+            }
 
+            if(aCount === bCount)
+              return 0
+
+            return aCount > bCount ? 1 : -1;
+          });
+        }
+        else{
+          uniqueValues.sort();
+        }
         this.yScales[dimension] = d3.scalePoint()
           .domain(uniqueValues)
           .range([this.height, 0], 1);
@@ -72,7 +91,7 @@ class ParallelAxes {
       .attr("d", this.getPath.bind(this));
 
     this.dimensionGroups = this.svg.selectAll(".dimension").data(this.dimensions);
-    let self = this;
+    self = this;
     this.createDragEvents();
     this.dimensionGroups.enter().append("g")
       .attr("class", "dimension axis")
@@ -82,9 +101,15 @@ class ParallelAxes {
       //apply drag events to the groups
       .call(this.dragEvents)
       .each(function(dimension) {
+        let axis = d3.axisLeft(self.yScales[dimension])
+        if(self.data[0][dimension].longLabels){
+          //only display the first 12 chars in long text labels
+          axis.tickFormat(dim => dim.slice(0,12))
+        }
 
         //add axis to the group
-        d3.select(this).call(d3.axisLeft(self.yScales[dimension]));
+        d3.select(this).call(axis);
+        
         let dimensionUnit = self.data[0][dimension].unit;
         let dimensionName = dimension.charAt(0).toUpperCase() + dimension.slice(1)
         //add axis label at top

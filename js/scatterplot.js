@@ -8,7 +8,7 @@ class Scatterplot {
 
   createScatterplot() {
     // set the dimensions and margins of the graph
-    this.margin = { top: 10, right: 20, bottom: 50, left: 60 }
+    this.margin = { top: 10, right: 100, bottom: 100, left: 150 }
     this.width = 400;
     this.height = 400;
 
@@ -110,7 +110,9 @@ class Scatterplot {
                    .domain([0, xMax])
                    .range([0, this.width]);
     }
-    d3.select("#xAxis").call(d3.axisBottom(this.xScale));
+    d3.select("#xAxis").call(d3.axisBottom(this.xScale)).selectAll("text")
+    .attr("transform", "rotate(" + (this.data[0][this.selectedX.id].longLabels ? 20 : 0) + ")")
+    .style("text-anchor", "start");
     d3.select("#xLabel").text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""))
 
     values = this.data.map(datum => datum[this.selectedY.id]);

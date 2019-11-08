@@ -11,13 +11,16 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
           unit: "Jupiter Masses"
         },
         discoveryMethod: {
-          value: d.pl_discmethod
+          value: d.pl_discmethod,
+          longLabels: true,
         },
         facility: {
-          value: d.pl_facility
+          value: d.pl_facility,
+          longLabels: true
         },
         name: {
-          value: d.pl_name
+          value: d.pl_name,
+          longLabels: true
         },
         radius: {
           value: Number(d.pl_radj),
