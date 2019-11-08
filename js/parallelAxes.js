@@ -173,19 +173,38 @@ class ParallelAxes {
 
         //reorder axes if the grabbed axis has moved far enough to displace another One
         //Note: getPosition uses this.dragging
+        let origDimensions = self.dimensions.slice();
         self.dimensions.sort(function(a, b) {
           return self.getPosition(a) - self.getPosition(b);
         });
+        let orderChanged = false;
+        //there is probably a smarter way to handle this but I'm lazy
+        for(let i=0; i < self.dimensions.length; i++) {
+          if(self.dimensions[i] !== origDimensions[i]){
+            orderChanged = true;
+            break;
+          }
+        }
         //update xScale now that order might have changed
         self.xScale.domain(self.dimensions);
 
         //update axis positions using new xScale
-        d3.selectAll(".dimension").attr("transform", function(dim) {
-          return "translate(" + self.getPosition(dim) + "," + self.margin.top + ")";
-        })
+        if(orderChanged){
+          d3.selectAll(".dimension").transition().duration(700).attr("transform", function(dim) {
+            return "translate(" + self.getPosition(dim) + "," + self.margin.top + ")";
+          })
 
-        //update lines to follow the moving axis
-        self.linesGroup.attr("d", self.getPath.bind(self));
+          //update lines to follow the moving axis
+          self.linesGroup.transition().duration(700).attr("d", self.getPath.bind(self));
+        }
+        else{
+          d3.selectAll(".dimension").attr("transform", function(dim) {
+            return "translate(" + self.getPosition(dim) + "," + self.margin.top + ")";
+          })
+
+          //update lines to follow the moving axis
+          self.linesGroup.attr("d", self.getPath.bind(self));
+        }
       })
       .on("end", function(dimension) {
         delete self.dragging[dimension];

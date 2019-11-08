@@ -145,7 +145,7 @@ class Scatterplot {
       .data(this.data)
 
     plotPoints.transition()
-      .duration(3000)
+      .duration(1000)
       //update positions of existing dots
       .attr("cx", d => this.xScale(d[this.selectedX.id].value))
       .attr("cy", d => this.yScale(d[this.selectedY.id].value))
