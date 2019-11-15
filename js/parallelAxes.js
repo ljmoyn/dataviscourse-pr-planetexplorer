@@ -89,7 +89,7 @@ class ParallelAxes {
       //initialize brushes for each axis
       this.yScales[dimension].brush = d3.brushY()
         .extent([[-8, this.yScales[dimension].range()[1]], [8, this.yScales[dimension].range()[0]]])
-        .on('brush', this.brush.bind(this));
+        .on('brush brush end', this.brush.bind(this))
     }
 
     this.linesGroup = this.svg
@@ -315,8 +315,13 @@ class ParallelAxes {
         });
       });
 
+      if(activeBrushes.length === 0){
+        this.linesGroup.classed("active", false);
+        return;
+      }
+
     //select the lines
-    this.linesGroup.classed('active', function(datum) {
+    this.linesGroup.classed("active", function(datum) {
 
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
