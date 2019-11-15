@@ -1,13 +1,10 @@
 d3.csv("data/confirmed-planets.csv").then(rawData => {
   d3.json("data/discoveryMethods.json").then(discoveryMethods => {
     data = rawData.map(function(d) {
-      return {
-        id: {
-          value: Number(d.loc_rowid)
-        },
+      cleanDatum = {
         mass: {
-          value: Number(d.pl_bmassj),
-          unit: "Jupiter Masses"
+          value: Number(d.pl_masse),
+          unit: "Earth Masses"
         },
         discoveryMethod: {
           value: d.pl_discmethod,
@@ -22,17 +19,18 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
           longLabels: true
         },
         radius: {
-          value: Number(d.pl_radj),
-          unit: "Jupiter Radius"
+          value: Number(d.pl_rade),
+          unit: "Earth Radius"
         },
-        lastUpdate: {
-          value: d.rowupdate
+        year: {
+          value: d.pl_disc
         },
         distance: {
           value: Number(d.st_dist),
           unit: "Parsecs"
         }
       };
+      return cleanDatum;
     });
 
     let scatterplot = new Scatterplot(data);
