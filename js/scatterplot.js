@@ -8,7 +8,7 @@ class Scatterplot {
 
   createScatterplot() {
     // set the dimensions and margins of the graph
-    this.margin = { top: 10, right: 100, bottom: 100, left: 150 }
+    this.margin = { top: 10, right: 100, bottom: 100, left: 150 };
     this.width = 400;
     this.height = 400;
 
@@ -26,12 +26,12 @@ class Scatterplot {
     this.pointGroup = this.svg.append("g");
 
     this.selectedX = {
-        id:"distance",
+      id: "distance",
       name: "Distance",
       unit: "Parsecs"
     };
     this.selectedY = {
-        id: "mass",
+      id: "mass",
       name: "Mass",
       unit: "Jupiter Masses"
     };
@@ -53,25 +53,28 @@ class Scatterplot {
       .call(d3.axisLeft(this.yScale));
     this.svg
       .append("text")
-      .attr("id","yLabel")
+      .attr("id", "yLabel")
       .attr(
         "transform",
         "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
       )
       .style("text-anchor", "middle")
-      .text(this.selectedY.name + (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : ""));
+      .text(
+        this.selectedY.name +
+          (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+      );
 
-      //Add x axis
-      this.xScale = d3
+    //Add x axis
+    this.xScale = d3
       .scaleLinear()
       .domain([0, xMax])
       .range([0, this.width]);
-      this.svg
+    this.svg
       .append("g")
       .attr("id", "xAxis")
       .attr("transform", "translate(0," + this.height + ")")
       .call(d3.axisBottom(this.xScale));
-      this.svg
+    this.svg
       .append("text")
       .attr("id", "xLabel")
       .attr(
@@ -83,9 +86,12 @@ class Scatterplot {
           ")"
       )
       .style("text-anchor", "middle")
-      .text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""));
+      .text(
+        this.selectedX.name +
+          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+      );
 
-      this.updateScatterplot();
+    this.updateScatterplot();
   }
 
   updateScatterplot() {
@@ -93,47 +99,61 @@ class Scatterplot {
 
     let values = this.data.map(datum => datum[this.selectedX.id]);
     // Find max y value for scale
-    if(values.some(v => isNaN(v.value)))
-    {
-        let uniqueValues = values.map(v => v.value);
-        uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
-        uniqueValues.sort();
+    if (values.some(v => isNaN(v.value))) {
+      let uniqueValues = values.map(v => v.value);
+      uniqueValues = uniqueValues.filter(function(v, i) {
+        return uniqueValues.indexOf(v) == i;
+      });
+      uniqueValues.sort();
 
-        this.xScale = d3.scalePoint()
-                   .domain(uniqueValues)
-                   .range([0,this.width]);
+      this.xScale = d3
+        .scalePoint()
+        .domain(uniqueValues)
+        .range([0, this.width]);
+    } else {
+      let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
+      this.xScale = d3
+        .scaleLinear()
+        .domain([0, xMax])
+        .range([0, this.width]);
     }
-    else
-    {
-        let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
-        this.xScale = d3.scaleLinear()
-                   .domain([0, xMax])
-                   .range([0, this.width]);
-    }
-    d3.select("#xAxis").call(d3.axisBottom(this.xScale)).selectAll("text")
-    .attr("transform", "rotate(" + (this.data[0][this.selectedX.id].longLabels ? 20 : 0) + ")")
-    .style("text-anchor", "start");
-    d3.select("#xLabel").text(this.selectedX.name + (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : ""))
+    d3.select("#xAxis")
+      .call(d3.axisBottom(this.xScale))
+      .selectAll("text")
+      .attr(
+        "transform",
+        "rotate(" + (this.data[0][this.selectedX.id].longLabels ? 20 : 0) + ")"
+      )
+      .style("text-anchor", "start");
+    d3.select("#xLabel").text(
+      this.selectedX.name +
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    );
 
     values = this.data.map(datum => datum[this.selectedY.id]);
-    if(values.some(v => isNaN(v.value)))
-    {
-        let uniqueValues = values.map(v => v.value);
-        uniqueValues = uniqueValues.filter(function(v, i) {return uniqueValues.indexOf(v) == i;});
-        uniqueValues.sort();
+    if (values.some(v => isNaN(v.value))) {
+      let uniqueValues = values.map(v => v.value);
+      uniqueValues = uniqueValues.filter(function(v, i) {
+        return uniqueValues.indexOf(v) == i;
+      });
+      uniqueValues.sort();
 
-        this.yScale = d3.scalePoint()
-                   .domain(uniqueValues)
-                   .range([this.height, 0]);
-    }
-    else{
-        let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
-        this.yScale = d3.scaleLinear()
-                   .domain([0, yMax])
-                   .range([this.height, 0]);
+      this.yScale = d3
+        .scalePoint()
+        .domain(uniqueValues)
+        .range([this.height, 0]);
+    } else {
+      let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
+      this.yScale = d3
+        .scaleLinear()
+        .domain([0, yMax])
+        .range([this.height, 0]);
     }
     d3.select("#yAxis").call(d3.axisLeft(this.yScale));
-    d3.select("#yLabel").text(this.selectedY.name + (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : ""))
+    d3.select("#yLabel").text(
+      this.selectedY.name +
+        (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+    );
 
     // Initiate hover
     let div = d3
@@ -142,18 +162,18 @@ class Scatterplot {
       .attr("class", "tooltip")
       .style("opacity", 0);
 
-    let plotPoints = this.pointGroup
-      .selectAll("circle")
-      .data(this.data)
+    let plotPoints = this.pointGroup.selectAll("circle").data(this.data);
 
-    plotPoints.transition()
+    plotPoints
+      .transition()
       .duration(1000)
       //update positions of existing dots
       .attr("cx", d => this.xScale(d[this.selectedX.id].value))
-      .attr("cy", d => this.yScale(d[this.selectedY.id].value))
+      .attr("cy", d => this.yScale(d[this.selectedY.id].value));
 
-     // Add dots
-     plotPoints.enter()
+    // Add dots
+    plotPoints
+      .enter()
       .append("circle")
       .attr("cx", d => this.xScale(d[this.selectedX.id].value))
       .attr("cy", d => this.yScale(d[this.selectedY.id].value))
@@ -192,6 +212,6 @@ class Scatterplot {
           .attr("r", 1.2);
       });
 
-      plotPoints.exit().remove()
+    plotPoints.exit().remove();
   }
 }
