@@ -38,7 +38,7 @@ class ParallelAxes {
       .scalePoint()
       .domain(this.dimensions)
       .rangeRound([0, this.width])
-      .padding(.25);
+      .padding(0.25);
     this.yScales = {};
 
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
