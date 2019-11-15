@@ -20,7 +20,7 @@ class ParallelAxes {
     this.dimensions = d3.keys(this.dimensionMetadata).filter(function(dimension) {
       return this.dimensionMetadata[dimension].order >= 0;
     }.bind(this));
-    this.dimensions.sort(function(a,b){
+    this.dimensions.sort(function(a, b) {
       return (this.dimensionMetadata[a].order > this.dimensionMetadata[b].order) ? 1 : -1
     }.bind(this));
 
@@ -88,7 +88,10 @@ class ParallelAxes {
 
       //initialize brushes for each axis
       this.yScales[dimension].brush = d3.brushY()
-        .extent([[-8, this.yScales[dimension].range()[1]], [8, this.yScales[dimension].range()[0]]])
+        .extent([
+          [-8, this.yScales[dimension].range()[1]],
+          [8, this.yScales[dimension].range()[0]]
+        ])
         .on('brush brush end', this.brush.bind(this))
     }
 
@@ -304,7 +307,7 @@ class ParallelAxes {
     let activeBrushes = [];
     //Get currently active brushes
     this.svg.selectAll('.brush')
-      .filter(function(d){
+      .filter(function(d) {
         return d3.brushSelection(this);
       })
       .each(function(d) {
@@ -314,10 +317,10 @@ class ParallelAxes {
         });
       });
 
-      if(activeBrushes.length === 0){
-        this.linesGroup.classed("active", false);
-        return;
-      }
+    if (activeBrushes.length === 0) {
+      this.linesGroup.classed("active", false);
+      return;
+    }
 
     //select the lines
     let yScales = this.yScales;
@@ -326,11 +329,11 @@ class ParallelAxes {
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
-        return activeBrush.extent[0] <= yScales[dimension](datum[dimension])
-          && yScales[dimension](datum[dimension]) <= activeBrush.extent[1];
+        return activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
+          yScales[dimension](datum[dimension]) <= activeBrush.extent[1];
       })
 
-      if(withinBrushes)
+      if (withinBrushes)
         d3.select(this).raise()
 
       //set active class on path if it is within the extent
