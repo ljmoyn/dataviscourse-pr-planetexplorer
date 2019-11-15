@@ -38,7 +38,7 @@ class ParallelAxes {
       .scalePoint()
       .domain(this.dimensions)
       .rangeRound([0, this.width])
-      .padding(1);
+      .padding(.25);
     this.yScales = {};
 
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
@@ -85,6 +85,11 @@ class ParallelAxes {
           )
           .range([this.height, 0]);
       }
+
+      //initialize brushes for each axis
+      this.yScales[dimension].brush = d3.brushY()
+        .extent([[-8, this.yScales[dimension].range()[1]], [8, this.yScales[dimension].range()[0]]])
+        .on('brush', this.brush.bind(this));
     }
 
     this.linesGroup = this.svg
@@ -101,7 +106,7 @@ class ParallelAxes {
       .selectAll(".dimension")
       .data(this.dimensions);
     self = this;
-    this.createDragEvents();
+    //this.createDragEvents();
     this.dimensionGroups
       .enter()
       .append("g")
@@ -110,7 +115,6 @@ class ParallelAxes {
         return "translate(" + self.xScale(d) + "," + self.margin.top + ")";
       })
       //apply drag events to the groups
-      .call(this.dragEvents)
       .each(function(dimension) {
         let axis = d3.axisLeft(self.yScales[dimension]);
         if (self.data[0][dimension].longLabels) {
@@ -120,6 +124,9 @@ class ParallelAxes {
 
         //add axis to the group
         d3.select(this).call(axis);
+
+        //apply brush to each group
+        d3.select(this).call(self.yScales[dimension].brush);
 
         let dimensionUnit = self.data[0][dimension].unit;
         let dimensionName =
@@ -179,10 +186,17 @@ class ParallelAxes {
             self.svg.selectAll(".buttonX").classed("selectedButton", false);
             d3.select(this).classed("selectedButton", true);
           });
-      });
+      })
+      //Add brush group to each axis
+      .append("g")
+      .classed("brush", true)
+      .each(function(dimension) {
+        d3.select(this).call(self.yScales[dimension].brush);
+      })
+      .selectAll("rect")
+      .attr("x", -8)
+      .attr("width", 16)
   }
-
-  update() {}
 
   getPath(datum) {
     let self = this;
@@ -283,5 +297,39 @@ class ParallelAxes {
           .duration(300)
           .attr("d", self.getPath.bind(self));
       });
+  }
+
+  //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
+  brush() {
+    let self = this;
+    let activeBrushes = [];
+    //Get currently active brushes
+    this.svg.selectAll('.brush')
+      .filter(function(d){
+        return d3.brushSelection(this);
+      })
+      .each(function(d) {
+        activeBrushes.push({
+          dimension: d,
+          extent: d3.brushSelection(this)
+        });
+      });
+
+    //select the lines
+    this.linesGroup.classed('active', function(datum) {
+
+      //check if current line is within the extent of every active brush
+      let withinBrushes = activeBrushes.every(function(activeBrush) {
+        let dimension = activeBrush.dimension;
+        return activeBrush.extent[0] <= self.yScales[dimension](datum[dimension].value)
+          && self.yScales[dimension](datum[dimension].value) <= activeBrush.extent[1];
+      })
+
+      if(withinBrushes)
+        d3.select(this).raise()
+
+      //set active class on path if it is within the extent
+      return withinBrushes;
+    });
   }
 }

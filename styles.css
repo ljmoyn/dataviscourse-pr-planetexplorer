@@ -34,10 +34,15 @@ div.tooltip {
   border-color: black;
 }
 
-.dimension,
+.active {
+  stroke: red !important;
+
+}
+
+/* .dimension,
 .axis,
 .dimension text,
 .dimension path,
 .dimension g {
   cursor: grab;
-}
+} */
