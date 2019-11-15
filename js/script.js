@@ -2,41 +2,49 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
   d3.json("data/discoveryMethods.json").then(discoveryMethods => {
     data = rawData.map(function(d) {
       cleanDatum = {
-        mass: {
-          value: Number(d.pl_masse),
-          unit: "Earth Masses"
-        },
-        discoveryMethod: {
-          value: d.pl_discmethod,
-          longLabels: true
-        },
-        facility: {
-          value: d.pl_facility,
-          longLabels: true
-        },
-        name: {
-          value: d.pl_name,
-          longLabels: true
-        },
-        radius: {
-          value: Number(d.pl_rade),
-          unit: "Earth Radius"
-        },
-        year: {
-          value: d.pl_disc
-        },
-        distance: {
-          value: Number(d.st_dist),
-          unit: "Parsecs"
-        }
+        mass: Number(d.pl_masse),
+        discoveryMethod: d.pl_discmethod,
+        facility: d.pl_facility,
+        name: d.pl_name,
+        radius: Number(d.pl_rade),
+        year: d.pl_disc,
+        distance: Number(d.st_dist)
       };
       return cleanDatum;
     });
 
-    let scatterplot = new Scatterplot(data);
+    dimensionMetadata = {
+      mass: {
+        unit: "Earth Masses",
+        order: 3
+      },
+      discoveryMethod: {
+        longLabels: true,
+        order: 1
+      },
+      facility: {
+        longLabels: true,
+        order: 0
+      },
+      name: {
+        longLabels: true,
+        order: -1
+      },
+      radius: {
+        unit: "Earth Radius",
+        order: 4
+      },
+      year: {},
+      distance: {
+        unit: "Parsecs",
+        order: 2
+      }
+    }
+
+    let scatterplot = new Scatterplot(data, dimensionMetadata);
     scatterplot.createScatterplot();
 
-    let violin = new Violin(data);
+    let violin = new Violin(data, dimensionMetadata);
     violin.createViolin();
 
     let updateScatterAxes = function(selectedX, selectedY) {
@@ -45,7 +53,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
       scatterplot.updateScatterplot();
     };
-    let parallelAxes = new ParallelAxes(data, updateScatterAxes);
+    let parallelAxes = new ParallelAxes(data, updateScatterAxes, dimensionMetadata);
 
     //GenerateDiscoveryMethodsJSON(data);
 

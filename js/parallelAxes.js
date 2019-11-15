@@ -1,6 +1,7 @@
 class ParallelAxes {
-  constructor(data, updateScatterAxes) {
+  constructor(data, updateScatterAxes, dimensionMetadata) {
     this.data = data;
+    this.dimensionMetadata = dimensionMetadata;
     this.updateScatterAxes = updateScatterAxes;
     this.margin = {
       top: 80,
@@ -16,22 +17,22 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-    this.dimensions = d3.keys(this.data[0]).filter(function(dimension) {
-      return (
-        dimension !== "name" && dimension !== "id" && dimension !== "lastUpdate"
-      );
-    });
-    this.dimensions.sort();
+    this.dimensions = d3.keys(this.dimensionMetadata).filter(function(dimension) {
+      return this.dimensionMetadata[dimension].order >= 0;
+    }.bind(this));
+    this.dimensions.sort(function(a,b){
+      return (this.dimensionMetadata[a].order > this.dimensionMetadata[b].order) ? 1 : -1
+    }.bind(this));
 
     this.selectedX = {
       id: "distance",
       name: "Distance",
-      unit: "Parsecs"
+      unit: this.dimensionMetadata["distance"].unit
     };
     this.selectedY = {
       id: "mass",
       name: "Mass",
-      unit: "Jupiter Masses"
+      unit: this.dimensionMetadata["mass"].unit
     };
 
     this.xScale = d3
@@ -43,15 +44,14 @@ class ParallelAxes {
 
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
     //initialize yScales, which is an object containing scales for each dimension
-    let self = this;
     for (let i = 0; i < this.dimensions.length; i++) {
       let dimension = this.dimensions[i];
       let values = this.data.map(function(datum) {
         return datum[dimension];
       });
       //non-numerical data needs a different type of scale
-      if (values.some(v => isNaN(v.value))) {
-        let uniqueValues = values.map(v => v.value);
+      if (values.some(v => isNaN(v))) {
+        let uniqueValues = values.map(v => v);
         uniqueValues = uniqueValues.filter(function(v, i) {
           return uniqueValues.indexOf(v) == i;
         });
@@ -59,15 +59,15 @@ class ParallelAxes {
           uniqueValues.sort(function(a, b) {
             let aCount = 0;
             let bCount = 0;
-            for (let i = 0; i < self.data.length; i++) {
-              if (self.data[i][dimension].value === a) aCount++;
-              if (self.data[i][dimension].value === b) bCount++;
+            for (let i = 0; i < this.data.length; i++) {
+              if (this.data[i][dimension] === a) aCount++;
+              if (this.data[i][dimension] === b) bCount++;
             }
 
             if (aCount === bCount) return 0;
 
             return aCount > bCount ? 1 : -1;
-          });
+          }.bind(this));
         } else {
           uniqueValues.sort();
         }
@@ -80,7 +80,7 @@ class ParallelAxes {
           .scaleLinear()
           .domain(
             d3.extent(this.data, function(datum) {
-              return +datum[dimension].value;
+              return +datum[dimension];
             })
           )
           .range([this.height, 0]);
@@ -105,19 +105,19 @@ class ParallelAxes {
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
       .data(this.dimensions);
-    self = this;
+    let self = this;
     //this.createDragEvents();
     this.dimensionGroups
       .enter()
       .append("g")
       .attr("class", "dimension axis")
       .attr("transform", function(d) {
-        return "translate(" + self.xScale(d) + "," + self.margin.top + ")";
-      })
+        return "translate(" + this.xScale(d) + "," + this.margin.top + ")";
+      }.bind(this))
       //apply drag events to the groups
       .each(function(dimension) {
         let axis = d3.axisLeft(self.yScales[dimension]);
-        if (self.data[0][dimension].longLabels) {
+        if (self.dimensionMetadata[dimension].longLabels) {
           //only display the first 12 chars in long text labels
           axis.tickFormat(dim => dim.slice(0, 12));
         }
@@ -128,7 +128,7 @@ class ParallelAxes {
         //apply brush to each group
         d3.select(this).call(self.yScales[dimension].brush);
 
-        let dimensionUnit = self.data[0][dimension].unit;
+        let dimensionUnit = self.dimensionMetadata[dimension].unit;
         let dimensionName =
           dimension.charAt(0).toUpperCase() + dimension.slice(1);
         //add axis label at top
@@ -199,14 +199,13 @@ class ParallelAxes {
   }
 
   getPath(datum) {
-    let self = this;
     return d3.line()(
       this.dimensions.map(function(dimension) {
         return [
-          self.getPosition(dimension),
-          self.yScales[dimension](datum[dimension].value)
+          this.getPosition(dimension),
+          this.yScales[dimension](datum[dimension])
         ];
-      })
+      }.bind(this))
     );
   }
 
@@ -219,36 +218,37 @@ class ParallelAxes {
   //based on https://bl.ocks.org/jasondavies/1341281
   createDragEvents() {
     let self = this;
+
     this.dragging = {};
     this.dragEvents = d3
       .drag()
       .on("start", function(dimension) {
         //store the current "correct" position of grabbed axis
-        self.dragging[dimension] = self.xScale(dimension);
-      })
+        this.dragging[dimension] = this.xScale(dimension);
+      }.bind(this))
       .on("drag", function(dimension) {
         //get latest moved position of grabbed axis
-        self.dragging[dimension] = Math.min(
-          self.width,
+        this.dragging[dimension] = Math.min(
+          this.width,
           Math.max(0, d3.event.x)
         );
 
         //reorder axes if the grabbed axis has moved far enough to displace another One
         //Note: getPosition uses this.dragging
-        let origDimensions = self.dimensions.slice();
-        self.dimensions.sort(function(a, b) {
-          return self.getPosition(a) - self.getPosition(b);
-        });
+        let origDimensions = this.dimensions.slice();
+        this.dimensions.sort(function(a, b) {
+          return this.getPosition(a) - this.getPosition(b);
+        }.bind(this));
         let orderChanged = false;
         //there is probably a smarter way to handle this but I'm lazy
-        for (let i = 0; i < self.dimensions.length; i++) {
-          if (self.dimensions[i] !== origDimensions[i]) {
+        for (let i = 0; i < this.dimensions.length; i++) {
+          if (this.dimensions[i] !== origDimensions[i]) {
             orderChanged = true;
             break;
           }
         }
         //update xScale now that order might have changed
-        self.xScale.domain(self.dimensions);
+        this.xScale.domain(this.dimensions);
 
         //update axis positions using new xScale
         if (orderChanged) {
@@ -258,29 +258,29 @@ class ParallelAxes {
             .attr("transform", function(dim) {
               return (
                 "translate(" +
-                self.getPosition(dim) +
+                this.getPosition(dim) +
                 "," +
-                self.margin.top +
+                this.margin.top +
                 ")"
               );
-            });
+            }.bind(this));
 
           //update lines to follow the moving axis
-          self.linesGroup
+          this.linesGroup
             .transition()
             .duration(700)
-            .attr("d", self.getPath.bind(self));
+            .attr("d", this.getPath.bind(this));
         } else {
           d3.selectAll(".dimension").attr("transform", function(dim) {
             return (
-              "translate(" + self.getPosition(dim) + "," + self.margin.top + ")"
+              "translate(" + this.getPosition(dim) + "," + this.margin.top + ")"
             );
-          });
+          }.bind(this));
 
           //update lines to follow the moving axis
-          self.linesGroup.attr("d", self.getPath.bind(self));
+          this.linesGroup.attr("d", this.getPath.bind(this));
         }
-      })
+      }.bind(this))
       .on("end", function(dimension) {
         delete self.dragging[dimension];
 
@@ -301,7 +301,6 @@ class ParallelAxes {
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
   brush() {
-    let self = this;
     let activeBrushes = [];
     //Get currently active brushes
     this.svg.selectAll('.brush')
@@ -321,13 +320,14 @@ class ParallelAxes {
       }
 
     //select the lines
+    let yScales = this.yScales;
     this.linesGroup.classed("active", function(datum) {
 
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
-        return activeBrush.extent[0] <= self.yScales[dimension](datum[dimension].value)
-          && self.yScales[dimension](datum[dimension].value) <= activeBrush.extent[1];
+        return activeBrush.extent[0] <= yScales[dimension](datum[dimension])
+          && yScales[dimension](datum[dimension]) <= activeBrush.extent[1];
       })
 
       if(withinBrushes)

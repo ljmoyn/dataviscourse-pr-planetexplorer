@@ -2,8 +2,9 @@ class Scatterplot {
   /**
    * Creates a Scatterplot Object
    */
-  constructor(data) {
+  constructor(data, dimensionMetadata) {
     this.data = data;
+    this.dimensionMetadata = dimensionMetadata;
   }
 
   createScatterplot() {
@@ -28,19 +29,19 @@ class Scatterplot {
     this.selectedX = {
       id: "distance",
       name: "Distance",
-      unit: "Parsecs"
+      unit: this.dimensionMetadata["distance"].unit
     };
     this.selectedY = {
       id: "mass",
       name: "Mass",
-      unit: "Jupiter Masses"
+      unit: this.dimensionMetadata["mass"].unit
     };
 
     // Find max x value for scale
-    let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
+    let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
 
     // Find max y value for scale
-    let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
 
     // Add Y axis
     this.yScale = d3
@@ -99,8 +100,8 @@ class Scatterplot {
 
     let values = this.data.map(datum => datum[this.selectedX.id]);
     // Find max y value for scale
-    if (values.some(v => isNaN(v.value))) {
-      let uniqueValues = values.map(v => v.value);
+    if (values.some(v => isNaN(v))) {
+      let uniqueValues = values.map(v => v);
       uniqueValues = uniqueValues.filter(function(v, i) {
         return uniqueValues.indexOf(v) == i;
       });
@@ -111,7 +112,7 @@ class Scatterplot {
         .domain(uniqueValues)
         .range([0, this.width]);
     } else {
-      let xMax = d3.max(this.data.map(d => d[this.selectedX.id].value));
+      let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
       this.xScale = d3
         .scaleLinear()
         .domain([0, xMax])
@@ -122,7 +123,7 @@ class Scatterplot {
       .selectAll("text")
       .attr(
         "transform",
-        "rotate(" + (this.data[0][this.selectedX.id].longLabels ? 20 : 0) + ")"
+        "rotate(" + (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) + ")"
       )
       .style("text-anchor", "start");
     d3.select("#xLabel").text(
@@ -131,8 +132,8 @@ class Scatterplot {
     );
 
     values = this.data.map(datum => datum[this.selectedY.id]);
-    if (values.some(v => isNaN(v.value))) {
-      let uniqueValues = values.map(v => v.value);
+    if (values.some(v => isNaN(v))) {
+      let uniqueValues = values.map(v => v);
       uniqueValues = uniqueValues.filter(function(v, i) {
         return uniqueValues.indexOf(v) == i;
       });
@@ -143,7 +144,7 @@ class Scatterplot {
         .domain(uniqueValues)
         .range([this.height, 0]);
     } else {
-      let yMax = d3.max(this.data.map(d => d[this.selectedY.id].value));
+      let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
       this.yScale = d3
         .scaleLinear()
         .domain([0, yMax])
@@ -168,15 +169,15 @@ class Scatterplot {
       .transition()
       .duration(1000)
       //update positions of existing dots
-      .attr("cx", d => this.xScale(d[this.selectedX.id].value))
-      .attr("cy", d => this.yScale(d[this.selectedY.id].value));
+      .attr("cx", d => this.xScale(d[this.selectedX.id]))
+      .attr("cy", d => this.yScale(d[this.selectedY.id]));
 
     // Add dots
     plotPoints
       .enter()
       .append("circle")
-      .attr("cx", d => this.xScale(d[this.selectedX.id].value))
-      .attr("cy", d => this.yScale(d[this.selectedY.id].value))
+      .attr("cx", d => this.xScale(d[this.selectedX.id]))
+      .attr("cy", d => this.yScale(d[this.selectedY.id]))
       .attr("stroke", "#69b3a2")
       .attr("stroke-width", 1)
       .attr("r", 1.2)
@@ -190,10 +191,10 @@ class Scatterplot {
         div
           .html(
             "<h5> Name: " +
-              d.name.value +
+              d.name +
               "</h5>" +
               "<h5> Facility: " +
-              d.facility.value +
+              d.facility +
               "</h5>"
           )
           .style("left", d3.event.pageX + 28 + "px")

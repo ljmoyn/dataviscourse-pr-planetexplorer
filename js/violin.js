@@ -2,8 +2,9 @@ class Violin {
   /**
    * Creates a Scatterplot Object
    */
-  constructor(data) {
+  constructor(data, dimensionMetadata) {
     this.data = data;
+    this.dimensionMetadata = dimensionMetadata
   }
 
   createViolin() {
