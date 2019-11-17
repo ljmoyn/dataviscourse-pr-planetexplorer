@@ -6,12 +6,12 @@ class ParallelAxes {
     this.margin = {
       top: 80,
       right: 20,
-      bottom: 35,
+      bottom: 85,
       left: 20
     };
 
     this.width = 2000;
-    this.height = 400;
+    this.height = 500;
     this.svg = d3
       .select("#parallelAxes")
       .attr("width", this.width + this.margin.left + this.margin.right)
@@ -83,7 +83,8 @@ class ParallelAxes {
               return +datum[dimension];
             })
           )
-          .range([this.height, 0]);
+          .range([this.height, 0])
+          .nice();
       }
 
       //initialize brushes for each axis
@@ -199,14 +200,48 @@ class ParallelAxes {
       .selectAll("rect")
       .attr("x", -8)
       .attr("width", 16)
+
+    let yPos = this.margin.top + this.height + 50;
+    this.missingDataGroup = this.svg.append("g").attr("id", "missing-data")
+      .attr("transform", "translate(0," + yPos + ")");
+    this.missingDataGroup.append("line")
+      .attr("stroke", 1)
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", this.width)
+      .attr("y2", 0);
+    this.missingDataGroup.append("text")
+      .text("Missing Data")
+      .attr("transform", "translate(30,-13)")
+
+    this.missingDataGroup.append("foreignObject")
+      .attr("y", -30)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .append("xhtml:div")
+      .append("button")
+      .attr("type", "button")
+      .attr("id", "incompleteDataButton")
+      .html("Hide Incomplete Data")
+      .on("click", function() {
+        this.toggleIncompleteData();
+      }.bind(this));
+
+    this.toggleIncompleteData()
   }
 
   getPath(datum) {
     return d3.line()(
       this.dimensions.map(function(dimension) {
+
+        let value = datum[dimension];
+        if (value === null) {
+          value = this.yScales[dimension].invert(this.height + 50)
+        }
         return [
           this.getPosition(dimension),
-          this.yScales[dimension](datum[dimension])
+          this.yScales[dimension](value)
         ];
       }.bind(this))
     );
@@ -339,5 +374,23 @@ class ParallelAxes {
       //set active class on path if it is within the extent
       return withinBrushes;
     });
+  }
+
+  toggleIncompleteData() {
+    let button = d3.select("#incompleteDataButton");
+    let selected = button.classed("selectedButton");
+    d3.select("#incompleteDataButton").classed("selectedButton", !selected)
+    selected = !selected;
+
+    this.linesGroup.classed("hidden", function(datum) {
+      if (!selected)
+        return false;
+
+      for (let key in datum) {
+        if (datum[key] === null)
+          return true;
+      }
+      return false;
+    })
   }
 }

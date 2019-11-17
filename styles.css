@@ -39,6 +39,15 @@ div.tooltip {
 
 }
 
+#missing-data line {
+  stroke: black;
+  stroke-width: 1px
+}
+
+.hidden{
+  stroke-opacity: 1;
+}
+
 /* .dimension,
 .axis,
 .dimension text,

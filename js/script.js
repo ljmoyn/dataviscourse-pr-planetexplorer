@@ -2,13 +2,13 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
   d3.json("data/discoveryMethods.json").then(discoveryMethods => {
     data = rawData.map(function(d) {
       cleanDatum = {
-        mass: Number(d.pl_masse),
+        mass: d.pl_masse === "" ? null : Number(d.pl_masse),
         discoveryMethod: d.pl_discmethod,
         facility: d.pl_facility,
         name: d.pl_name,
-        radius: Number(d.pl_rade),
+        radius: d.pl_rade === "" ? null : Number(d.pl_rade),
         year: d.pl_disc,
-        distance: Number(d.st_dist)
+        distance: d.st_dist === "" ? null : Number(d.st_dist)
       };
       return cleanDatum;
     });
@@ -34,7 +34,9 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         unit: "Earth Radius",
         order: 4
       },
-      year: {},
+      year: {
+        order: 5
+      },
       distance: {
         unit: "Parsecs",
         order: 2
