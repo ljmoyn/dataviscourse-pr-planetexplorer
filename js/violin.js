@@ -144,30 +144,27 @@ class Violin {
 
     let xNums = {};
 
-    let maxNum = 0;
+      for(let i = 0; i < sumstat.length; i++)
+      {
+        let maxNum = 0;
+        let allBins = sumstat[i].value;
+        let lengths = allBins.map(function(a) {
+          return a.length;
+        });
+        let longest = d3.max(lengths);
+        if (longest > maxNum) {
+          maxNum = longest;
+        }
+        let test = ""
+        for(let j = 0; j < sumstat[i].value.length; j++){
+          sumstat[i].value[j].scale = d3
+            .scaleLinear()
+            .range([0, this.xScale.bandwidth()])
+            .domain([-maxNum, maxNum]);
+        }
 
-    for (let i in sumstat) {
-      // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
-      let allBins = sumstat[i].value;
-      let lengths = allBins.map(function(a) {
-        return a.length;
-      });
-      let longuest = d3.max(lengths);
-      if (longuest > maxNum) {
-        maxNum = longuest;
+
       }
-
-      // The maximum width of a violin must be x.bandwidth = the width dedicated to a group
-      //   xNums[sumstat[i].key] = d3
-      //     .scaleLinear()
-      //     .range([0, this.xScale.bandwidth()])
-      //     .domain([-maxNum, maxNum]);
-    }
-
-    let xNum = d3
-      .scaleLinear()
-      .range([0, this.xScale.bandwidth()])
-      .domain([-maxNum, maxNum]);
 
     // Add the shape to this svg!
     this.svg
@@ -183,7 +180,7 @@ class Violin {
       ) // Translation on the right to be at the group position
       .append("path")
       .datum(function(d) {
-        return d.value;
+        return d.value
       })
       .style("stroke", "none")
       .style("fill", "#69b3a2")
@@ -192,10 +189,10 @@ class Violin {
         d3
           .area()
           .x0(function(d) {
-            return xNum(-d.length);
+            return d.scale(-d.length);
           })
           .x1(function(d) {
-            return xNum(d.length);
+            return d.scale(d.length);
           })
           .y(
             function(d) {
