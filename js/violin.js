@@ -4,120 +4,205 @@ class Violin {
    */
   constructor(data, dimensionMetadata) {
     this.data = data;
-    this.dimensionMetadata = dimensionMetadata
+    this.dimensionMetadata = dimensionMetadata;
   }
 
   createViolin() {
     // set the dimensions and margins of the graph
-    var margin = { top: 10, right: 100, bottom: 100, left: 150 },
-      width = 1000,
-      height = 400;
+    this.margin = { top: 10, right: 100, bottom: 100, left: 150 };
+    this.width = 1000;
+    this.height = 400;
 
     // append the svg object to the body of the page
-    var svg = d3
+    this.svg = d3
       .select("#violin")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
+      .attr("width", this.width + this.margin.left + this.margin.right)
+      .attr("height", this.height + this.margin.top + this.margin.bottom)
       .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      .attr(
+        "transform",
+        "translate(" + this.margin.left + "," + this.margin.top + ")"
+      );
 
-    // Read the data and compute summary statistics for each specie
-    d3.csv(
-      "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/iris.csv"
-    ).then(function(data) {
-      // Build and Show the Y scale
+    this.pointGroup = this.svg.append("g");
 
-      var y = d3
-        .scaleLinear()
-        .domain([3.5, 8]) // Note that here the Y scale is set manually
-        .range([height, 0]);
-      svg.append("g").call(d3.axisLeft(y));
+    this.selectedX = {
+      id: "discoveryMethod",
+      name: "Discovery Method",
+      unit: this.dimensionMetadata["discoveryMethod"].unit
+    };
 
-      // Build and Show the X scale. It is a band scale like for a boxplot: each group has an dedicated RANGE on the axis. This range has a length of x.bandwidth
-      var x = d3
-        .scaleBand()
-        .range([0, width])
-        .domain(["setosa", "versicolor", "virginica"])
-        .padding(0.05); // This is important: it is the space between 2 groups. 0 means no padding. 1 is the maximum.
-      svg
-        .append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x));
+    this.selectedY = {
+      id: "distance",
+      name: "Distance",
+      unit: this.dimensionMetadata["distance"].unit
+    };
 
-      // Features of the histogram
-      var histogram = d3
-        .histogram()
-        .domain(y.domain())
-        .thresholds(y.ticks(20)) // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
-        .value(d => d);
+    // Find max y value for scale
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
 
-      // Compute the binning for each group of the dataset
-      var sumstat = d3
-        .nest() // nest function allows to group the calculation per level of a factor
-        .key(function(d) {
-          return d.Species;
-        })
-        .rollup(function(d) {
-          // For each key..
-          let input = d.map(function(g) {
-            return g.Sepal_Length;
-          }); // Keep the variable called Sepal_Length
-          let bins = histogram(input); // And compute the binning on it.
-          return bins;
-        })
-        .entries(data);
+    // Add Y axis
+    this.yScale = d3
+      .scaleLinear()
+      .domain([0, yMax])
+      .range([this.height, 0]);
+    this.svg
+      .append("g")
+      .attr("id", "yAxis")
+      .call(d3.axisLeft(this.yScale));
+    this.svg
+      .append("text")
+      .attr("id", "yLabel")
+      .attr(
+        "transform",
+        "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
+      )
+      .style("text-anchor", "middle")
+      .text(
+        this.selectedY.name +
+          (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+      );
 
+    // Hardcoded x-axis as "Discovery Method"
+    this.xLabels = d3
+      .map(this.data, function(d) {
+        return d.discoveryMethod;
+      })
+      .keys();
+
+    //Add x axis
+    this.xScale = d3
+      .scaleBand()
+      .range([0, this.width])
+      .domain(this.xLabels)
+      .padding(0.05);
+    this.svg
+      .append("g")
+      .attr("id", "xAxis")
+      .attr("transform", "translate(0," + this.height + ")")
+      .call(d3.axisBottom(this.xScale));
+    this.svg
+      .append("text")
+      .attr("id", "xLabel")
+      .attr(
+        "transform",
+        "translate(" +
+          this.width / 2 +
+          " ," +
+          (this.height + this.margin.top + 60) +
+          ")" +
+          ""
+      )
+      .style("text-anchor", "middle")
+      .text(
+        this.selectedX.name +
+          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+      );
+
+    this.updateViolin();
+  }
+
+  updateViolin() {
+    // Set x-axis
+    d3.select("#xAxis")
+      .call(d3.axisBottom(this.xScale))
+      .selectAll("text")
+      .attr(
+        "transform",
+        "rotate(" +
+          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
+          ")"
+      )
+      .style("text-anchor", "start");
+    d3.select("#xLabel").text(
+      this.selectedX.name +
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    );
+
+    // Features of the histogram
+    let histogram = d3
+      .histogram()
+      .domain(this.yScale.domain())
+      .thresholds(this.yScale.ticks(40)) // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
+      .value(d => d);
+
+    // Compute the binning for each group of the dataset
+    let sumstat = d3
+      .nest() // nest function allows to group the calculation per level of a factor
+      .key(function(d) {
+        return d.discoveryMethod;
+      })
+      .rollup(function(d) {
+        // For each key..
+        let input = d.map(function(g) {
+          return g.distance;
+        }); // Keep the variable called distance
+        let bins = histogram(input); // And compute the binning on it.
+        return bins;
+      })
+      .entries(this.data);
+
+    let xNums = {};
+
+    let maxNum = 0;
+
+    for (let i in sumstat) {
       // What is the biggest number of value in a bin? We need it cause this value will have a width of 100% of the bandwidth.
-      var maxNum = 0;
-      for (let i in sumstat) {
-        let allBins = sumstat[i].value;
-        let lengths = allBins.map(function(a) {
-          return a.length;
-        });
-        let longuest = d3.max(lengths);
-        if (longuest > maxNum) {
-          maxNum = longuest;
-        }
+      let allBins = sumstat[i].value;
+      let lengths = allBins.map(function(a) {
+        return a.length;
+      });
+      let longuest = d3.max(lengths);
+      if (longuest > maxNum) {
+        maxNum = longuest;
       }
 
       // The maximum width of a violin must be x.bandwidth = the width dedicated to a group
-      var xNum = d3
-        .scaleLinear()
-        .range([0, x.bandwidth()])
-        .domain([-maxNum, maxNum]);
+      //   xNums[sumstat[i].key] = d3
+      //     .scaleLinear()
+      //     .range([0, this.xScale.bandwidth()])
+      //     .domain([-maxNum, maxNum]);
+    }
 
-      // Add the shape to this svg!
-      svg
-        .selectAll("myViolin")
-        .data(sumstat)
-        .enter() // So now we are working group per group
-        .append("g")
-        .attr("transform", function(d) {
-          return "translate(" + x(d.key) + " ,0)";
-        }) // Translation on the right to be at the group position
-        .append("path")
-        .datum(function(d) {
-          return d.value;
-        }) // So now we are working bin per bin
-        .style("stroke", "none")
-        .style("fill", "#69b3a2")
-        .attr(
-          "d",
-          d3
-            .area()
-            .x0(function(d) {
-              return xNum(-d.length);
-            })
-            .x1(function(d) {
-              return xNum(d.length);
-            })
-            .y(function(d) {
-              return y(d.x0);
-            })
-            .curve(d3.curveCatmullRom) // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
-        );
-    });
+    let xNum = d3
+      .scaleLinear()
+      .range([0, this.xScale.bandwidth()])
+      .domain([-maxNum, maxNum]);
 
-    //this.updateViolin();
+    // Add the shape to this svg!
+    this.svg
+      .selectAll("myViolin")
+      .data(sumstat)
+      .enter() // So now we are working group per group
+      .append("g")
+      .attr(
+        "transform",
+        function(d) {
+          return "translate(" + this.xScale(d.key) + " ,0)";
+        }.bind(this)
+      ) // Translation on the right to be at the group position
+      .append("path")
+      .datum(function(d) {
+        return d.value;
+      })
+      .style("stroke", "none")
+      .style("fill", "#69b3a2")
+      .attr(
+        "d",
+        d3
+          .area()
+          .x0(function(d) {
+            return xNum(-d.length);
+          })
+          .x1(function(d) {
+            return xNum(d.length);
+          })
+          .y(
+            function(d) {
+              return this.yScale(d.x0);
+            }.bind(this)
+          )
+          .curve(d3.curveCatmullRom) // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
+      );
   }
 }

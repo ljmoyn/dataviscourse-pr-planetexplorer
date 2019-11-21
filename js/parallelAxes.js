@@ -17,12 +17,18 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
-    this.dimensions = d3.keys(this.dimensionMetadata).filter(function(dimension) {
-      return this.dimensionMetadata[dimension].order >= 0;
-    }.bind(this));
-    this.dimensions.sort(function(a, b) {
-      return (this.dimensionMetadata[a].order > this.dimensionMetadata[b].order) ? 1 : -1
-    }.bind(this));
+    this.dimensions = d3.keys(this.dimensionMetadata).filter(
+      function(dimension) {
+        return this.dimensionMetadata[dimension].order >= 0;
+      }.bind(this)
+    );
+    this.dimensions.sort(
+      function(a, b) {
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
+          ? 1
+          : -1;
+      }.bind(this)
+    );
 
     this.selectedX = {
       id: "distance",
@@ -56,18 +62,20 @@ class ParallelAxes {
           return uniqueValues.indexOf(v) == i;
         });
         if (dimension === "facility" || dimension === "discoveryMethod") {
-          uniqueValues.sort(function(a, b) {
-            let aCount = 0;
-            let bCount = 0;
-            for (let i = 0; i < this.data.length; i++) {
-              if (this.data[i][dimension] === a) aCount++;
-              if (this.data[i][dimension] === b) bCount++;
-            }
+          uniqueValues.sort(
+            function(a, b) {
+              let aCount = 0;
+              let bCount = 0;
+              for (let i = 0; i < this.data.length; i++) {
+                if (this.data[i][dimension] === a) aCount++;
+                if (this.data[i][dimension] === b) bCount++;
+              }
 
-            if (aCount === bCount) return 0;
+              if (aCount === bCount) return 0;
 
-            return aCount > bCount ? 1 : -1;
-          }.bind(this));
+              return aCount > bCount ? 1 : -1;
+            }.bind(this)
+          );
         } else {
           uniqueValues.sort();
         }
@@ -87,12 +95,13 @@ class ParallelAxes {
       }
 
       //initialize brushes for each axis
-      this.yScales[dimension].brush = d3.brushY()
+      this.yScales[dimension].brush = d3
+        .brushY()
         .extent([
           [-8, this.yScales[dimension].range()[1]],
           [8, this.yScales[dimension].range()[0]]
         ])
-        .on('brush brush end', this.brush.bind(this))
+        .on("brush brush end", this.brush.bind(this));
     }
 
     this.linesGroup = this.svg
@@ -114,9 +123,12 @@ class ParallelAxes {
       .enter()
       .append("g")
       .attr("class", "dimension axis")
-      .attr("transform", function(d) {
-        return "translate(" + this.xScale(d) + "," + this.margin.top + ")";
-      }.bind(this))
+      .attr(
+        "transform",
+        function(d) {
+          return "translate(" + this.xScale(d) + "," + this.margin.top + ")";
+        }.bind(this)
+      )
       //apply drag events to the groups
       .each(function(dimension) {
         let axis = d3.axisLeft(self.yScales[dimension]);
@@ -198,17 +210,19 @@ class ParallelAxes {
       })
       .selectAll("rect")
       .attr("x", -8)
-      .attr("width", 16)
+      .attr("width", 16);
   }
 
   getPath(datum) {
     return d3.line()(
-      this.dimensions.map(function(dimension) {
-        return [
-          this.getPosition(dimension),
-          this.yScales[dimension](datum[dimension])
-        ];
-      }.bind(this))
+      this.dimensions.map(
+        function(dimension) {
+          return [
+            this.getPosition(dimension),
+            this.yScales[dimension](datum[dimension])
+          ];
+        }.bind(this)
+      )
     );
   }
 
@@ -225,65 +239,83 @@ class ParallelAxes {
     this.dragging = {};
     this.dragEvents = d3
       .drag()
-      .on("start", function(dimension) {
-        //store the current "correct" position of grabbed axis
-        this.dragging[dimension] = this.xScale(dimension);
-      }.bind(this))
-      .on("drag", function(dimension) {
-        //get latest moved position of grabbed axis
-        this.dragging[dimension] = Math.min(
-          this.width,
-          Math.max(0, d3.event.x)
-        );
+      .on(
+        "start",
+        function(dimension) {
+          //store the current "correct" position of grabbed axis
+          this.dragging[dimension] = this.xScale(dimension);
+        }.bind(this)
+      )
+      .on(
+        "drag",
+        function(dimension) {
+          //get latest moved position of grabbed axis
+          this.dragging[dimension] = Math.min(
+            this.width,
+            Math.max(0, d3.event.x)
+          );
 
-        //reorder axes if the grabbed axis has moved far enough to displace another One
-        //Note: getPosition uses this.dragging
-        let origDimensions = this.dimensions.slice();
-        this.dimensions.sort(function(a, b) {
-          return this.getPosition(a) - this.getPosition(b);
-        }.bind(this));
-        let orderChanged = false;
-        //there is probably a smarter way to handle this but I'm lazy
-        for (let i = 0; i < this.dimensions.length; i++) {
-          if (this.dimensions[i] !== origDimensions[i]) {
-            orderChanged = true;
-            break;
+          //reorder axes if the grabbed axis has moved far enough to displace another One
+          //Note: getPosition uses this.dragging
+          let origDimensions = this.dimensions.slice();
+          this.dimensions.sort(
+            function(a, b) {
+              return this.getPosition(a) - this.getPosition(b);
+            }.bind(this)
+          );
+          let orderChanged = false;
+          //there is probably a smarter way to handle this but I'm lazy
+          for (let i = 0; i < this.dimensions.length; i++) {
+            if (this.dimensions[i] !== origDimensions[i]) {
+              orderChanged = true;
+              break;
+            }
           }
-        }
-        //update xScale now that order might have changed
-        this.xScale.domain(this.dimensions);
+          //update xScale now that order might have changed
+          this.xScale.domain(this.dimensions);
 
-        //update axis positions using new xScale
-        if (orderChanged) {
-          d3.selectAll(".dimension")
-            .transition()
-            .duration(700)
-            .attr("transform", function(dim) {
-              return (
-                "translate(" +
-                this.getPosition(dim) +
-                "," +
-                this.margin.top +
-                ")"
+          //update axis positions using new xScale
+          if (orderChanged) {
+            d3.selectAll(".dimension")
+              .transition()
+              .duration(700)
+              .attr(
+                "transform",
+                function(dim) {
+                  return (
+                    "translate(" +
+                    this.getPosition(dim) +
+                    "," +
+                    this.margin.top +
+                    ")"
+                  );
+                }.bind(this)
               );
-            }.bind(this));
 
-          //update lines to follow the moving axis
-          this.linesGroup
-            .transition()
-            .duration(700)
-            .attr("d", this.getPath.bind(this));
-        } else {
-          d3.selectAll(".dimension").attr("transform", function(dim) {
-            return (
-              "translate(" + this.getPosition(dim) + "," + this.margin.top + ")"
+            //update lines to follow the moving axis
+            this.linesGroup
+              .transition()
+              .duration(700)
+              .attr("d", this.getPath.bind(this));
+          } else {
+            d3.selectAll(".dimension").attr(
+              "transform",
+              function(dim) {
+                return (
+                  "translate(" +
+                  this.getPosition(dim) +
+                  "," +
+                  this.margin.top +
+                  ")"
+                );
+              }.bind(this)
             );
-          }.bind(this));
 
-          //update lines to follow the moving axis
-          this.linesGroup.attr("d", this.getPath.bind(this));
-        }
-      }.bind(this))
+            //update lines to follow the moving axis
+            this.linesGroup.attr("d", this.getPath.bind(this));
+          }
+        }.bind(this)
+      )
       .on("end", function(dimension) {
         delete self.dragging[dimension];
 
@@ -306,7 +338,8 @@ class ParallelAxes {
   brush() {
     let activeBrushes = [];
     //Get currently active brushes
-    this.svg.selectAll('.brush')
+    this.svg
+      .selectAll(".brush")
       .filter(function(d) {
         return d3.brushSelection(this);
       })
@@ -325,16 +358,16 @@ class ParallelAxes {
     //select the lines
     let yScales = this.yScales;
     this.linesGroup.classed("active", function(datum) {
-
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
-        return activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
-          yScales[dimension](datum[dimension]) <= activeBrush.extent[1];
-      })
+        return (
+          activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
+          yScales[dimension](datum[dimension]) <= activeBrush.extent[1]
+        );
+      });
 
-      if (withinBrushes)
-        d3.select(this).raise()
+      if (withinBrushes) d3.select(this).raise();
 
       //set active class on path if it is within the extent
       return withinBrushes;
