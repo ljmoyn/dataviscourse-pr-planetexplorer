@@ -141,9 +141,6 @@ class ParallelAxes {
         //add axis to the group
         d3.select(this).call(axis);
 
-        //apply brush to each group
-        d3.select(this).call(self.yScales[dimension].brush);
-
           if(self.dimensionMetadata[dimension].order > 1){
             let dropdown = d3.select(this)
               .append("foreignObject")
