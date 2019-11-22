@@ -4,7 +4,7 @@ class ParallelAxes {
     this.dimensionMetadata = dimensionMetadata;
     this.updateScatterAxes = updateScatterAxes;
     this.margin = {
-      top: 80,
+      top: 60,
       right: 20,
       bottom: 85,
       left: 20
@@ -99,8 +99,8 @@ class ParallelAxes {
       this.yScales[dimension].brush = d3
         .brushY()
         .extent([
-          [-8, this.yScales[dimension].range()[1]],
-          [8, this.yScales[dimension].range()[0]]
+          [-8, this.yScales[dimension].range()[1]-5],
+          [8, this.yScales[dimension].range()[0]+5]
         ])
         .on("brush brush end", this.brush.bind(this));
     }
@@ -144,64 +144,38 @@ class ParallelAxes {
         //apply brush to each group
         d3.select(this).call(self.yScales[dimension].brush);
 
-        let dimensionUnit = self.dimensionMetadata[dimension].unit;
-        let dimensionName =
-          dimension.charAt(0).toUpperCase() + dimension.slice(1);
-        //add axis label at top
-        d3.select(this)
-          .append("text")
-          .attr("fill", "black")
-          .style("text-anchor", "middle")
-          .attr("y", -65)
-          .text(
-            dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-          );
-        //add Y button
-        d3.select(this)
-          .append("foreignObject")
-          .attr("y", -30)
-          .attr("x", -22)
-          .attr("width", 50)
-          .attr("height", 25)
-          .append("xhtml:div")
-          .append("button")
-          .attr("type", "button")
-          .classed("buttonY", true)
-          .classed("selectedButton", self.selectedY.id === dimension)
-          .html("Set Y")
-          .on("click", function() {
-            self.selectedY = {
-              id: dimension,
-              name: dimensionName,
-              unit: dimensionUnit
-            };
-            self.updateScatterAxes(null, self.selectedY);
-            self.svg.selectAll(".buttonY").classed("selectedButton", false);
-            d3.select(this).classed("selectedButton", true);
-          });
-        //add X button
-        d3.select(this)
-          .append("foreignObject")
-          .attr("y", -55)
-          .attr("x", -22)
-          .attr("width", 50)
-          .attr("height", 25)
-          .append("xhtml:div")
-          .append("button")
-          .attr("type", "button")
-          .classed("buttonX", true)
-          .classed("selectedButton", self.selectedX.id === dimension)
-          .html("Set X")
-          .on("click", function() {
-            self.selectedX = {
-              id: dimension,
-              name: dimensionName,
-              unit: dimensionUnit
-            };
-            self.updateScatterAxes(self.selectedX);
-            self.svg.selectAll(".buttonX").classed("selectedButton", false);
-            d3.select(this).classed("selectedButton", true);
-          });
+          if(self.dimensionMetadata[dimension].order > 1){
+            let dropdown = d3.select(this)
+              .append("foreignObject")
+              .attr("y", -50)
+              .attr("x", -125)
+              .attr("width", 250)
+              .attr("height", 40)
+              .append("xhtml:div")
+              .append("select")
+              .classed("axisDropdown", true)
+              .classed("selectedButton", self.selectedY.id === dimension)
+              dropdown.selectAll("option")
+              .data(self.dimensions.filter(function(dim){
+                return self.dimensionMetadata[dim].order > 1
+              }))
+              .enter()
+              .append("option")
+              .text(function(dim) {
+                let dimensionUnit = self.dimensionMetadata[dim].unit;
+                let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+                return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
+              })
+              .attr("value", function(dim) {
+                return dim;
+              });
+
+              dropdown.property("value", dimension)
+                .on("change", function(newDim){
+                  
+                })
+            }
+
       })
       //Add brush group to each axis
       .append("g")
@@ -213,42 +187,7 @@ class ParallelAxes {
       .attr("x", -8)
       .attr("width", 16);
 
-    let yPos = this.margin.top + this.height + 50;
-    this.missingDataGroup = this.svg
-      .append("g")
-      .attr("id", "missing-data")
-      .attr("transform", "translate(0," + yPos + ")");
-    this.missingDataGroup
-      .append("line")
-      .attr("stroke", 1)
-      .attr("x1", 0)
-      .attr("y1", 0)
-      .attr("x2", this.width)
-      .attr("y2", 0);
-    this.missingDataGroup
-      .append("text")
-      .text("Missing Data")
-      .attr("transform", "translate(30,-13)");
-
-    this.missingDataGroup
-      .append("foreignObject")
-      .attr("y", -30)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .append("xhtml:div")
-      .append("button")
-      .attr("type", "button")
-      .attr("id", "incompleteDataButton")
-      .html("Hide Incomplete Data")
-      .on(
-        "click",
-        function() {
-          this.toggleIncompleteData();
-        }.bind(this)
-      );
-
-    this.toggleIncompleteData();
+      this.createMissingDataGroup();
   }
 
   getPath(datum) {
@@ -259,118 +198,10 @@ class ParallelAxes {
           if (value === null) {
             value = this.yScales[dimension].invert(this.height + 50);
           }
-          return [this.getPosition(dimension), this.yScales[dimension](value)];
+          return [this.xScale(dimension), this.yScales[dimension](value)];
         }.bind(this)
       )
     );
-  }
-
-  getPosition(dimension) {
-    //if the axis is being dragged, use that position rather than one from the xScale
-    let dragPosition = this.dragging ? this.dragging[dimension] : null;
-    return !dragPosition ? this.xScale(dimension) : dragPosition;
-  }
-
-  //based on https://bl.ocks.org/jasondavies/1341281
-  createDragEvents() {
-    let self = this;
-
-    this.dragging = {};
-    this.dragEvents = d3
-      .drag()
-      .on(
-        "start",
-        function(dimension) {
-          //store the current "correct" position of grabbed axis
-          this.dragging[dimension] = this.xScale(dimension);
-        }.bind(this)
-      )
-      .on(
-        "drag",
-        function(dimension) {
-          //get latest moved position of grabbed axis
-          this.dragging[dimension] = Math.min(
-            this.width,
-            Math.max(0, d3.event.x)
-          );
-
-          //reorder axes if the grabbed axis has moved far enough to displace another One
-          //Note: getPosition uses this.dragging
-          let origDimensions = this.dimensions.slice();
-          this.dimensions.sort(
-            function(a, b) {
-              return this.getPosition(a) - this.getPosition(b);
-            }.bind(this)
-          );
-          let orderChanged = false;
-          //there is probably a smarter way to handle this but I'm lazy
-          for (let i = 0; i < this.dimensions.length; i++) {
-            if (this.dimensions[i] !== origDimensions[i]) {
-              orderChanged = true;
-              break;
-            }
-          }
-          //update xScale now that order might have changed
-          this.xScale.domain(this.dimensions);
-
-          //update axis positions using new xScale
-          if (orderChanged) {
-            d3.selectAll(".dimension")
-              .transition()
-              .duration(700)
-              .attr(
-                "transform",
-                function(dim) {
-                  return (
-                    "translate(" +
-                    this.getPosition(dim) +
-                    "," +
-                    this.margin.top +
-                    ")"
-                  );
-                }.bind(this)
-              );
-
-            //update lines to follow the moving axis
-            this.linesGroup
-              .transition()
-              .duration(700)
-              .attr("d", this.getPath.bind(this));
-          } else {
-            d3.selectAll(".dimension").attr(
-              "transform",
-              function(dim) {
-                return (
-                  "translate(" +
-                  this.getPosition(dim) +
-                  "," +
-                  this.margin.top +
-                  ")"
-                );
-              }.bind(this)
-            );
-
-            //update lines to follow the moving axis
-            this.linesGroup.attr("d", this.getPath.bind(this));
-          }
-        }.bind(this)
-      )
-      .on("end", function(dimension) {
-        delete self.dragging[dimension];
-
-        //bounce axis/lines back to the nearest "standard" position, to preserve equal spacing
-        d3.select(this)
-          .transition()
-          .duration(300)
-          .attr(
-            "transform",
-            "translate(" + self.xScale(dimension) + "," + self.margin.top + ")"
-          );
-        self.linesGroup
-          .transition()
-          .duration(300)
-          .attr("d", self.getPath.bind(self));
-      });
   }
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
@@ -413,19 +244,82 @@ class ParallelAxes {
     });
   }
 
+  createMissingDataGroup(){
+    let yPos = this.margin.top + this.height + 50;
+    this.missingDataGroup = this.svg
+      .append("g")
+      .attr("id", "missing-data")
+      .attr("transform", "translate(0," + yPos + ")");
+    this.missingDataGroup
+      .append("line")
+      .attr("stroke", 1)
+      .attr("x1", 0)
+      .attr("y1", 0)
+      .attr("x2", this.width)
+      .attr("y2", 0);
+    this.missingDataGroup
+      .append("text")
+      .text("Missing Data")
+      .attr("transform", "translate(30,-13)");
+
+    this.missingDataGroup
+      .append("foreignObject")
+      .attr("y", -30)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .append("xhtml:div")
+      .append("button")
+      .attr("type", "button")
+      .attr("id", "incompleteDataButton")
+      .html("Hide Incomplete Data")
+      .on(
+        "click",
+        function() {
+          this.toggleIncompleteData();
+        }.bind(this)
+      );
+
+    this.toggleIncompleteData();
+  }
+
   toggleIncompleteData() {
     let button = d3.select("#incompleteDataButton");
-    let selected = button.classed("selectedButton");
-    d3.select("#incompleteDataButton").classed("selectedButton", !selected);
-    selected = !selected;
+    let initiallyHidden = button.classed("selectedButton");
 
-    this.linesGroup.classed("hidden", function(datum) {
-      if (!selected) return false;
+    d3.select("#incompleteDataButton").classed("selectedButton", !initiallyHidden);
 
-      for (let key in datum) {
-        if (datum[key] === null) return true;
-      }
-      return false;
-    });
+    let linePosition = initiallyHidden ? 0 : -35;
+
+    let toggleLines = function(type){
+      if(type === "end" && !initiallyHidden)
+        return;
+
+      if(type === "start" && initiallyHidden)
+        return;
+
+      this.linesGroup.classed("hidden", function(datum) {
+        if (initiallyHidden) return false;
+
+        for (let key in datum) {
+          if (datum[key] === null) return true;
+        }
+        return false;
+      });
+    }.bind(this)
+
+    this.missingDataGroup
+      .select("line")
+      .transition()
+      .duration(500)
+      .attr("transform", "translate(0," + linePosition + ")")
+      .on("start", function(){
+        toggleLines("start")
+      }.bind(this))
+      .on("end", function(){
+        toggleLines("end")
+      }.bind(this))
+    //update lines to follow the moving axis
+    //this.linesGroup.transition().duration(500).attr("d", this.getPath.bind(this));
   }
 }
