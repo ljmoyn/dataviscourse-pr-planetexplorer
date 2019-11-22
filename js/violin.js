@@ -9,8 +9,8 @@ class Violin {
 
   createViolin() {
     // set the dimensions and margins of the graph
-    this.margin = { top: 10, right: 100, bottom: 100, left: 150 };
-    this.width = 1000;
+    this.margin = { top: 80, right: 100, bottom: 100, left: 150 };
+    this.width = 1100;
     this.height = 400;
 
     // append the svg object to the body of the page
@@ -37,6 +37,20 @@ class Violin {
       name: "Distance",
       unit: this.dimensionMetadata["distance"].unit
     };
+
+    this.dimensions = d3.keys(this.dimensionMetadata).filter(
+      function(dimension) {
+        return this.dimensionMetadata[dimension].order >= 0;
+      }.bind(this)
+    );
+
+    this.dimensions.sort(
+      function(a, b) {
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
+          ? 1
+          : -1;
+      }.bind(this)
+    );
 
     // Find max y value for scale
     let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
@@ -79,8 +93,7 @@ class Violin {
     this.svg
       .append("g")
       .attr("id", "xAxis")
-      .attr("transform", "translate(0," + this.height + ")")
-      .call(d3.axisBottom(this.xScale));
+      .attr("transform", "translate(0," + this.height + ")");
     this.svg
       .append("text")
       .attr("id", "xLabel")
@@ -89,7 +102,7 @@ class Violin {
         "translate(" +
           this.width / 2 +
           " ," +
-          (this.height + this.margin.top + 60) +
+          (this.height + this.margin.top) +
           ")" +
           ""
       )
@@ -99,31 +112,92 @@ class Violin {
           (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
 
+    let self = this;
+
+    d3.select("#violin")
+      .append("text")
+      .attr("y", 24)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select x-axis:");
+
+    d3.select("#violin")
+      .append("text")
+      .attr("y", 64)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select y-axis:");
+
+    let dropdownX = d3
+      .select("#violin")
+      .append("foreignObject")
+      .attr("y", 10)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .attr("font-size", 12)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownX
+      .selectAll("option")
+      .data(
+        self.dimensions.filter(function(dim) {
+          return self.dimensionMetadata[dim].order <= 1;
+        })
+      )
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
+
+    let dropdownY = d3
+      .select("#violin")
+      .append("foreignObject")
+      .attr("y", 50)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownY
+      .selectAll("option")
+      .data(
+        self.dimensions.filter(function(dim) {
+          return self.dimensionMetadata[dim].order > 1;
+        })
+      )
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
+
     this.updateViolin();
   }
 
   updateViolin() {
-    // Set x-axis
-    d3.select("#xAxis")
-      .call(d3.axisBottom(this.xScale))
-      .selectAll("text")
-      .attr(
-        "transform",
-        "rotate(" +
-          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
-          ")"
-      )
-      .style("text-anchor", "start");
-    d3.select("#xLabel").text(
-      this.selectedX.name +
-        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-    );
-
     // Features of the histogram
     let histogram = d3
       .histogram()
       .domain(this.yScale.domain())
-      .thresholds(this.yScale.ticks(40)) // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
+      .thresholds(this.yScale.ticks(30)) // Important: how many bins approx are going to be made? It is the 'resolution' of the violin plot
       .value(d => d);
 
     // Compute the binning for each group of the dataset
@@ -142,29 +216,49 @@ class Violin {
       })
       .entries(this.data);
 
-    let xNums = {};
-
-      for(let i = 0; i < sumstat.length; i++)
-      {
-        let maxNum = 0;
-        let allBins = sumstat[i].value;
-        let lengths = allBins.map(function(a) {
-          return a.length;
-        });
-        let longest = d3.max(lengths);
-        if (longest > maxNum) {
-          maxNum = longest;
-        }
-        let test = ""
-        for(let j = 0; j < sumstat[i].value.length; j++){
-          sumstat[i].value[j].scale = d3
-            .scaleLinear()
-            .range([0, this.xScale.bandwidth()])
-            .domain([-maxNum, maxNum]);
-        }
-
-
+    for (let i = 0; i < sumstat.length; i++) {
+      let maxNum = 0;
+      let allBins = sumstat[i].value;
+      let lengths = allBins.map(function(a) {
+        return a.length;
+      });
+      let longest = d3.max(lengths);
+      if (longest > maxNum) {
+        maxNum = longest;
       }
+      for (let j = 0; j < sumstat[i].value.length; j++) {
+        sumstat[i].value[j].scale = d3
+          .scaleLinear()
+          .range([0, this.xScale.bandwidth()])
+          .domain([-maxNum, maxNum]);
+      }
+      sumstat[i].size = d3.sum(lengths);
+    }
+
+    // Sort x labels by number of entries
+    sumstat.sort((a, b) => (a.size < b.size ? 1 : -1));
+
+    this.xScale.domain(
+      sumstat.map(function(d) {
+        return d.key;
+      })
+    );
+
+    // Set x-axis
+    d3.select("#xAxis")
+      .call(d3.axisBottom(this.xScale))
+      .selectAll("text")
+      .attr(
+        "transform",
+        "rotate(" +
+          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
+          ")"
+      )
+      .style("text-anchor", "start");
+    d3.select("#xLabel").text(
+      this.selectedX.name +
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    );
 
     // Add the shape to this svg!
     this.svg
@@ -180,7 +274,7 @@ class Violin {
       ) // Translation on the right to be at the group position
       .append("path")
       .datum(function(d) {
-        return d.value
+        return d.value;
       })
       .style("stroke", "none")
       .style("fill", "#69b3a2")
