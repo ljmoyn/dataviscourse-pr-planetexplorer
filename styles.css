@@ -49,7 +49,7 @@ div.tooltip {
 }
 
 /* https://css-tricks.com/styling-a-select-like-its-2019/ */
-.axisDropdown{
+.axisDropdown, .axisLabel{
   display: block;
   font-size: 16px;
   font-family: sans-serif;

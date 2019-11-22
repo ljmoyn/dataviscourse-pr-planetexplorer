@@ -154,7 +154,6 @@ class ParallelAxes {
               .append("xhtml:div")
               .append("select")
               .classed("axisDropdown", true)
-              .classed("selectedButton", self.selectedY.id === dimension)
               dropdown.selectAll("option")
               .data(self.dimensions.filter(function(dim){
                 return self.dimensionMetadata[dim].order > 1
@@ -172,8 +171,24 @@ class ParallelAxes {
 
               dropdown.property("value", dimension)
                 .on("change", function(newDim){
-                  
+
                 })
+            }
+            else {
+              let dimensionUnit = self.dimensionMetadata[dimension].unit;
+              let dimensionName =
+                dimension.charAt(0).toUpperCase() + dimension.slice(1);
+              //add axis label at top
+              d3.select(this)
+                .append("text")
+                .classed("axisLabel", true)
+                .attr("fill", "black")
+                .style("text-anchor", "middle")
+
+                .attr("y", -25)
+                .text(
+                  dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+                );
             }
 
       })
