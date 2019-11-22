@@ -17,11 +17,176 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
+    this.updateDimensions();
+    this.updateScales();
+
+    this.linesGroup = this.svg
+      .append("g")
+      .attr("class", "linesGroup")
+      .attr("transform", "translate(0," + this.margin.top + ")")
+
+    this.linesGroup.selectAll("path")
+      .data(this.data)
+      .enter()
+      .append("path")
+      .attr("d", this.getPath.bind(this));
+
+    this.dimensionGroups = this.svg
+      .selectAll(".dimension")
+      .data(this.dimensions);
+    let self = this;
+    //this.createDragEvents();
+    this.dimensionGroups
+      .enter()
+      .append("g")
+      .attr("class", "dimension axis")
+      .attr(
+        "transform",
+        function(d) {
+          return "translate(" + this.xScale(d) + "," + this.margin.top + ")";
+        }.bind(this)
+      )
+      //apply drag events to the groups
+      .each(function(dimension) {
+        let axis = d3.axisLeft(self.yScales[dimension]);
+        if (self.dimensionMetadata[dimension].longLabels) {
+          //only display the first 12 chars in long text labels
+          axis.tickFormat(dim => dim.slice(0, 12));
+        }
+
+        //add axis to the group
+        d3.select(this).call(axis);
+
+          if(self.dimensionMetadata[dimension].order > 1){
+            let dropdown = d3.select(this)
+              .append("foreignObject")
+              .attr("y", -50)
+              .attr("x", -125)
+              .attr("width", 250)
+              .attr("height", 40)
+              .append("xhtml:div")
+              .append("select")
+              .classed("axisDropdown", true)
+              dropdown.selectAll("option")
+              .data(self.dimensions.filter(function(dim){
+                return self.dimensionMetadata[dim].order > 1
+              }))
+              .enter()
+              .append("option")
+              .text(function(dim) {
+                let dimensionUnit = self.dimensionMetadata[dim].unit;
+                let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+                return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
+              })
+              .attr("value", function(dim) {
+                return dim;
+              });
+
+              dropdown.property("value", dimension)
+                // .on("focus", function(value){
+                //   this.previousValue = value;
+                // })
+                .on("change", function(previousDim, num, target){
+                  let newDim = target[0].value;
+                  let position = this.dimensionMetadata[previousDim].order;
+
+                  //if switched to a column that is already displayed, want to swap positions
+                  this.dimensionMetadata[previousDim].order = this.dimensionMetadata[newDim].order;
+                  this.dimensionMetadata[newDim].order = position;
+
+                  this.update();
+
+                }.bind(self))
+
+            }
+            else {
+              let dimensionUnit = self.dimensionMetadata[dimension].unit;
+              let dimensionName =
+                dimension.charAt(0).toUpperCase() + dimension.slice(1);
+              //add axis label at top
+              d3.select(this)
+                .append("text")
+                .classed("axisLabel", true)
+                .attr("fill", "black")
+                .style("text-anchor", "middle")
+
+                .attr("y", -25)
+                .text(
+                  dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+                );
+            }
+
+      })
+      //Add brush group to each axis
+      .append("g")
+      .classed("brush", true)
+      .each(function(dimension) {
+        d3.select(this).call(self.yScales[dimension].brush);
+      })
+      .selectAll("rect")
+      .attr("x", -8)
+      .attr("width", 16);
+
+      this.createMissingDataGroup();
+  }
+
+  update(){
+    this.updateDimensions();
+    this.updateScales();
+
+    this.linesGroup
+      .selectAll("path")
+      .transition()
+      .duration(1000)
+      .attr("d", this.getPath.bind(this))
+
+    this.dimensionGroups = this.svg
+      .selectAll(".dimension")
+      .data(this.dimensions);
+    let self = this;
+    //this.createDragEvents();
+    this.dimensionGroups
+      //apply drag events to the groups
+      .each(function(dimension) {
+        let axis = d3.axisLeft(self.yScales[dimension]);
+        if (self.dimensionMetadata[dimension].longLabels) {
+          //only display the first 12 chars in long text labels
+          axis.tickFormat(dim => dim.slice(0, 12));
+        }
+
+        //add axis to the group
+        d3.select(this).call(axis);
+        d3.select(this).select("select").property("value", dimension)
+
+      })
+
+      //clear any active brushes
+      this.dimensionGroups.selectAll(".brush")
+        .each(function(dimension) {
+          d3.select(this).call(self.yScales[dimension].brush.move, null);
+        });
+
+      //remove brushes
+      this.dimensionGroups.selectAll(".brush").remove()
+
+      //add new brushes corresponding to new axes
+      this.dimensionGroups.append("g")
+            .classed("brush", true)
+            .each(function(dimension) {
+              d3.select(this).call(self.yScales[dimension].brush);
+            })
+            .selectAll("rect")
+            .attr("x", -8)
+            .attr("width", 16)
+  }
+
+  updateDimensions(){
     this.dimensions = d3.keys(this.dimensionMetadata).filter(
       function(dimension) {
         return this.dimensionMetadata[dimension].order >= 0;
       }.bind(this)
     );
+
     this.dimensions.sort(
       function(a, b) {
         return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
@@ -29,17 +194,9 @@ class ParallelAxes {
           : -1;
       }.bind(this)
     );
+  }
 
-    this.selectedX = {
-      id: "distance",
-      name: "Distance",
-      unit: this.dimensionMetadata["distance"].unit
-    };
-    this.selectedY = {
-      id: "mass",
-      name: "Mass",
-      unit: this.dimensionMetadata["mass"].unit
-    };
+  updateScales(){
 
     this.xScale = d3
       .scalePoint()
@@ -102,107 +259,8 @@ class ParallelAxes {
           [-8, this.yScales[dimension].range()[1]-5],
           [8, this.yScales[dimension].range()[0]+5]
         ])
-        .on("brush brush end", this.brush.bind(this));
+        .on("brush end", this.brush.bind(this));
     }
-
-    this.linesGroup = this.svg
-      .append("g")
-      .attr("class", "linesGroup")
-      .attr("transform", "translate(0," + this.margin.top + ")")
-      .selectAll("path")
-      .data(this.data)
-      .enter()
-      .append("path")
-      .attr("d", this.getPath.bind(this));
-
-    this.dimensionGroups = this.svg
-      .selectAll(".dimension")
-      .data(this.dimensions);
-    let self = this;
-    //this.createDragEvents();
-    this.dimensionGroups
-      .enter()
-      .append("g")
-      .attr("class", "dimension axis")
-      .attr(
-        "transform",
-        function(d) {
-          return "translate(" + this.xScale(d) + "," + this.margin.top + ")";
-        }.bind(this)
-      )
-      //apply drag events to the groups
-      .each(function(dimension) {
-        let axis = d3.axisLeft(self.yScales[dimension]);
-        if (self.dimensionMetadata[dimension].longLabels) {
-          //only display the first 12 chars in long text labels
-          axis.tickFormat(dim => dim.slice(0, 12));
-        }
-
-        //add axis to the group
-        d3.select(this).call(axis);
-
-        //apply brush to each group
-        d3.select(this).call(self.yScales[dimension].brush);
-
-          if(self.dimensionMetadata[dimension].order > 1){
-            let dropdown = d3.select(this)
-              .append("foreignObject")
-              .attr("y", -50)
-              .attr("x", -125)
-              .attr("width", 250)
-              .attr("height", 40)
-              .append("xhtml:div")
-              .append("select")
-              .classed("axisDropdown", true)
-              dropdown.selectAll("option")
-              .data(self.dimensions.filter(function(dim){
-                return self.dimensionMetadata[dim].order > 1
-              }))
-              .enter()
-              .append("option")
-              .text(function(dim) {
-                let dimensionUnit = self.dimensionMetadata[dim].unit;
-                let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-                return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
-              })
-              .attr("value", function(dim) {
-                return dim;
-              });
-
-              dropdown.property("value", dimension)
-                .on("change", function(newDim){
-
-                })
-            }
-            else {
-              let dimensionUnit = self.dimensionMetadata[dimension].unit;
-              let dimensionName =
-                dimension.charAt(0).toUpperCase() + dimension.slice(1);
-              //add axis label at top
-              d3.select(this)
-                .append("text")
-                .classed("axisLabel", true)
-                .attr("fill", "black")
-                .style("text-anchor", "middle")
-
-                .attr("y", -25)
-                .text(
-                  dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-                );
-            }
-
-      })
-      //Add brush group to each axis
-      .append("g")
-      .classed("brush", true)
-      .each(function(dimension) {
-        d3.select(this).call(self.yScales[dimension].brush);
-      })
-      .selectAll("rect")
-      .attr("x", -8)
-      .attr("width", 16);
-
-      this.createMissingDataGroup();
   }
 
   getPath(datum) {
@@ -236,13 +294,13 @@ class ParallelAxes {
       });
 
     if (activeBrushes.length === 0) {
-      this.linesGroup.classed("active", false);
+      this.linesGroup.selectAll("path").classed("active", false);
       return;
     }
 
     //select the lines
     let yScales = this.yScales;
-    this.linesGroup.classed("active", function(datum) {
+    this.linesGroup.selectAll("path").classed("active", function(datum) {
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
@@ -313,7 +371,7 @@ class ParallelAxes {
       if(type === "start" && initiallyHidden)
         return;
 
-      this.linesGroup.classed("hidden", function(datum) {
+      this.linesGroup.selectAll("path").classed("hidden", function(datum) {
         if (initiallyHidden) return false;
 
         for (let key in datum) {
