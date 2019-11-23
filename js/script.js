@@ -8,7 +8,26 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         name: d.pl_name,
         radius: d.pl_rade === "" ? null : Number(d.pl_rade),
         year: d.pl_disc,
-        distance: d.st_dist === "" ? null : Number(d.st_dist)
+        distance: d.st_dist === "" ? null : Number(d.st_dist),
+        density: d.pl_dens === "" ? null : Number(d.pl_dens),
+        numPlanetsInSystem: d.pl_pnum === "" ? null : Number(d.pl_pnum),
+        stellarName: d.pl_hostname,
+        stellarMass: d.st_mass === "" ? null : Number(d.st_masse),
+        stellarRadius: d.st_rad === "" ? null : Number(d.st_rad),
+        stellarTemperature: d.st_teff === "" ? null : Number(d.st_teff),
+        opticalMagnitude: d.st_optmag === "" ? null : Number(d.st_optmag),
+        orbitalPeriod: d.pl_orbper === "" ? null : Number(d.pl_orbper),
+        orbitalSemimajorAxis: d.pl_orbsmax === "" ? null : Number(d.pl_orbsmax),
+        eccentricity: d.pl_orbeccen === "" ? null : Number(d.pl_orbeccen),
+        inclination: d.pl_orbinclin === "" ? null : Number(d.pl_orbinclin),
+        rightAscension: d.ra === "" ? null : Number(d.ra),
+        declination: d.dec === "" ? null : Number(d.dec),
+        discoveryReference: d.pl_disc_reflink,
+        discoveryLocale: d.pl_locale,
+        discoveryTelescope: d.pl_telescope,
+        discoveryInstrument: d.pl_instrument,
+        encyclopedia: d.pl_pelink,
+        dataExplorer: d.pl_edelink,
       };
       return cleanDatum;
     });
@@ -28,7 +47,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       },
       name: {
         longLabels: true,
-        order: -1
+        order: -1,
+        hidden: true
       },
       radius: {
         unit: "Earth Radius",
@@ -40,7 +60,78 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       distance: {
         unit: "Parsecs",
         order: 2
-      }
+      },
+      density: {
+        order: -1,
+        unit: "g/cm^3"
+      },
+      numPlanetsInSystem: {
+        order: -1,
+      },
+      stellarName: {
+        longLabels: true,
+        order: -1,
+        hidden: true
+      },
+      stellarMass: {
+        order: -1,
+        unit: "Solar Mass"
+      },
+      stellarRadius: {
+        order: -1,
+        unit: "Solar Radius"
+      },
+      stellarTemperature: {
+        order: -1,
+        unit: "Kelvin"
+      },
+      orbitalPeriod: {
+        order: -1,
+        unit: "days"
+      },
+      orbitalSemimajorAxis: {
+        order: -1,
+        unit: "AU"
+      },
+      eccentricity: {
+        order: -1
+      },
+      inclination: {
+        order: -1,
+        unit: "degrees"
+      },
+      rightAscension: {
+        order: -1,
+        unit: "degrees"
+      },
+      declination: {
+        order: -1,
+        unit: "degrees"
+      },
+      discoveryReference: {
+        order: -1,
+        hidden: true
+      },
+      discoveryLocale: {
+        order: -1
+      },
+      discoveryTelescope: {
+        order: -1,
+        hidden: true
+      },
+      discoveryInstrument: {
+        order: -1,
+        hidden: true
+      },
+      encyclopedia: {
+        order: -1,
+        hidden: true
+      },
+      dataExplorer: {
+        order: -1,
+        hidden: true
+      },
+
     }
 
     let scatterplot = new Scatterplot(data, dimensionMetadata);

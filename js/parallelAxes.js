@@ -17,6 +17,7 @@ class ParallelAxes {
       .attr("width", this.width + this.margin.left + this.margin.right)
       .attr("height", this.height + this.margin.top + this.margin.bottom);
 
+    this.dimensions = d3.keys(this.dimensionMetadata);
     this.updateDimensions();
     this.updateScales();
 
@@ -33,7 +34,7 @@ class ParallelAxes {
 
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
-      .data(this.dimensions);
+      .data(this.activeDimensions);
     let self = this;
     //this.createDragEvents();
     this.dimensionGroups
@@ -69,7 +70,7 @@ class ParallelAxes {
               .classed("axisDropdown", true)
               dropdown.selectAll("option")
               .data(self.dimensions.filter(function(dim){
-                return self.dimensionMetadata[dim].order > 1
+                return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
               }))
               .enter()
               .append("option")
@@ -142,7 +143,7 @@ class ParallelAxes {
 
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
-      .data(this.dimensions);
+      .data(this.activeDimensions);
     let self = this;
     //this.createDragEvents();
     this.dimensionGroups
@@ -181,13 +182,13 @@ class ParallelAxes {
   }
 
   updateDimensions(){
-    this.dimensions = d3.keys(this.dimensionMetadata).filter(
+    this.activeDimensions = d3.keys(this.dimensionMetadata).filter(
       function(dimension) {
         return this.dimensionMetadata[dimension].order >= 0;
       }.bind(this)
     );
 
-    this.dimensions.sort(
+    this.activeDimensions.sort(
       function(a, b) {
         return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
           ? 1
@@ -200,15 +201,15 @@ class ParallelAxes {
 
     this.xScale = d3
       .scalePoint()
-      .domain(this.dimensions)
+      .domain(this.activeDimensions)
       .rangeRound([0, this.width])
       .padding(0.25);
     this.yScales = {};
 
     //http://plnkr.co/edit/dCNuBsaDNBwr7CrAJUBe?p=preview
     //initialize yScales, which is an object containing scales for each dimension
-    for (let i = 0; i < this.dimensions.length; i++) {
-      let dimension = this.dimensions[i];
+    for (let i = 0; i < this.activeDimensions.length; i++) {
+      let dimension = this.activeDimensions[i];
       let values = this.data.map(function(datum) {
         return datum[dimension];
       });
@@ -265,7 +266,7 @@ class ParallelAxes {
 
   getPath(datum) {
     return d3.line()(
-      this.dimensions.map(
+      this.activeDimensions.map(
         function(dimension) {
           let value = datum[dimension];
           if (value === null) {
