@@ -9,7 +9,7 @@ class Scatterplot {
 
   createScatterplot() {
     // set the dimensions and margins of the graph
-    this.margin = { top: 10, right: 100, bottom: 100, left: 150 };
+    this.margin = { top: 80, right: 100, bottom: 100, left: 150 };
     this.width = 400;
     this.height = 400;
 
@@ -36,6 +36,20 @@ class Scatterplot {
       name: "Mass",
       unit: this.dimensionMetadata["mass"].unit
     };
+
+    this.dimensions = d3.keys(this.dimensionMetadata).filter(
+      function(dimension) {
+        return this.dimensionMetadata[dimension].order >= 0;
+      }.bind(this)
+    );
+
+    this.dimensions.sort(
+      function(a, b) {
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
+          ? 1
+          : -1;
+      }.bind(this)
+    );
 
     // Find max x value for scale
     let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
@@ -83,7 +97,7 @@ class Scatterplot {
         "translate(" +
           this.width / 2 +
           " ," +
-          (this.height + this.margin.top + 20) +
+          (this.height + this.margin.top - 10) +
           ")"
       )
       .style("text-anchor", "middle")
@@ -91,6 +105,83 @@ class Scatterplot {
         this.selectedX.name +
           (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
+
+    let self = this;
+
+    d3.select("#scatterplot")
+      .append("text")
+      .attr("y", 24)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select x-axis:");
+
+    d3.select("#scatterplot")
+      .append("text")
+      .attr("y", 64)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select y-axis:");
+
+    let dropdownX = d3
+      .select("#scatterplot")
+      .append("foreignObject")
+      .attr("y", 10)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .attr("font-size", 12)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownX
+      .selectAll("option")
+      .data(
+        self.dimensions.filter(function(dim) {
+          return self.dimensionMetadata[dim].order > 1;
+        })
+      )
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
+
+    let dropdownY = d3
+      .select("#scatterplot")
+      .append("foreignObject")
+      .attr("y", 50)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownY
+      .selectAll("option")
+      .data(
+        self.dimensions.filter(function(dim) {
+          return self.dimensionMetadata[dim].order > 1;
+        })
+      )
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
 
     this.updateScatterplot();
   }
@@ -123,7 +214,9 @@ class Scatterplot {
       .selectAll("text")
       .attr(
         "transform",
-        "rotate(" + (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) + ")"
+        "rotate(" +
+          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
+          ")"
       )
       .style("text-anchor", "start");
     d3.select("#xLabel").text(
