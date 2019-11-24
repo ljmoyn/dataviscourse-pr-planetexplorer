@@ -58,69 +58,68 @@ class ParallelAxes {
         //add axis to the group
         d3.select(this).call(axis);
 
-          if(self.dimensionMetadata[dimension].order > 1){
-            let dropdown = d3.select(this)
-              .append("foreignObject")
-              .attr("y", -50)
-              .attr("x", -125)
-              .attr("width", 250)
-              .attr("height", 40)
-              .append("xhtml:div")
-              .append("select")
-              .classed("axisDropdown", true)
-              dropdown.selectAll("option")
-              .data(self.dimensions.filter(function(dim){
-                return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
-              }))
-              .enter()
-              .append("option")
-              .text(function(dim) {
-                let dimensionUnit = self.dimensionMetadata[dim].unit;
-                let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-                return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
-              })
-              .attr("value", function(dim) {
-                return dim;
-              });
+        if (self.dimensionMetadata[dimension].order > 1) {
+          let dropdown = d3.select(this)
+            .append("foreignObject")
+            .attr("y", -50)
+            .attr("x", -125)
+            .attr("width", 250)
+            .attr("height", 40)
+            .append("xhtml:div")
+            .append("select")
+            .classed("axisDropdown", true)
+          dropdown.selectAll("option")
+            .data(self.dimensions.filter(function(dim) {
+              return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
+            }))
+            .enter()
+            .append("option")
+            .text(function(dim) {
+              let dimensionUnit = self.dimensionMetadata[dim].unit;
+              let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+              return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
+            })
+            .attr("value", function(dim) {
+              return dim;
+            });
 
-              dropdown.property("value", dimension)
-                // .on("focus", function(value){
-                //   this.previousValue = value;
-                // })
-                .on("change", function(previousDim, num, target){
-                  let newDim = target[0].value;
-                  let position = this.dimensionMetadata[previousDim].order;
+          dropdown.property("value", dimension)
+            // .on("focus", function(value){
+            //   this.previousValue = value;
+            // })
+            .on("change", function(previousDim, num, target) {
+              let newDim = target[0].value;
+              let position = this.dimensionMetadata[previousDim].order;
 
-                  //if switched to a column that is already displayed, want to swap positions
-                  this.dimensionMetadata[previousDim].order = this.dimensionMetadata[newDim].order;
-                  this.dimensionMetadata[newDim].order = position;
+              //if switched to a column that is already displayed, want to swap positions
+              this.dimensionMetadata[previousDim].order = this.dimensionMetadata[newDim].order;
+              this.dimensionMetadata[newDim].order = position;
 
-                  this.update();
+              this.update();
 
-                }.bind(self))
+            }.bind(self))
 
-            }
-            else {
-              let dimensionUnit = self.dimensionMetadata[dimension].unit;
-              let dimensionName =
-                dimension.charAt(0).toUpperCase() + dimension.slice(1);
-              //add axis label at top
-              d3.select(this)
-                .append("text")
-                .classed("axisLabel", true)
-                .attr("fill", "black")
-                .style("text-anchor", "middle")
+        } else {
+          let dimensionUnit = self.dimensionMetadata[dimension].unit;
+          let dimensionName =
+            dimension.charAt(0).toUpperCase() + dimension.slice(1);
+          //add axis label at top
+          d3.select(this)
+            .append("text")
+            .classed("axisLabel", true)
+            .attr("fill", "black")
+            .style("text-anchor", "middle")
 
-                .attr("y", -25)
-                .text(
-                  dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-                );
-            }
+            .attr("y", -25)
+            .text(
+              dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+            );
+        }
 
       })
 
-      //Add brush group to each axis
-      this.dimensionGroups.append("g")
+    //Add brush group to each axis
+    this.dimensionGroups.append("g")
       .classed("brush", true)
       .each(function(dimension) {
         d3.select(this).call(self.yScales[dimension].brush);
@@ -129,10 +128,10 @@ class ParallelAxes {
       .attr("x", -8)
       .attr("width", 16);
 
-      this.createMissingDataGroup();
+    this.createMissingDataGroup();
   }
 
-  update(){
+  update() {
     this.updateDimensions();
     this.updateScales();
 
@@ -162,24 +161,24 @@ class ParallelAxes {
 
       });
 
-      //remove brushes
-      //would be better code to clear colors using the brush function
-      //but can't get that to work and this is simple
-      this.linesGroup.selectAll("path").classed("active",false);
-      this.dimensionGroups.selectAll(".brush").remove();
+    //remove brushes
+    //would be better code to clear colors using the brush function
+    //but can't get that to work and this is simple
+    this.linesGroup.selectAll("path").classed("active", false);
+    this.dimensionGroups.selectAll(".brush").remove();
 
-      //add new brushes corresponding to new axes
-      this.dimensionGroups.append("g")
-            .classed("brush", true)
-            .each(function(dimension) {
-              d3.select(this).call(self.yScales[dimension].brush);
-            })
-            .selectAll("rect")
-            .attr("x", -8)
-            .attr("width", 16)
+    //add new brushes corresponding to new axes
+    this.dimensionGroups.append("g")
+      .classed("brush", true)
+      .each(function(dimension) {
+        d3.select(this).call(self.yScales[dimension].brush);
+      })
+      .selectAll("rect")
+      .attr("x", -8)
+      .attr("width", 16)
   }
 
-  updateDimensions(){
+  updateDimensions() {
     this.activeDimensions = d3.keys(this.dimensionMetadata).filter(
       function(dimension) {
         return this.dimensionMetadata[dimension].order >= 0;
@@ -188,14 +187,14 @@ class ParallelAxes {
 
     this.activeDimensions.sort(
       function(a, b) {
-        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
-          ? 1
-          : -1;
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order ?
+          1 :
+          -1;
       }.bind(this)
     );
   }
 
-  updateScales(){
+  updateScales() {
 
     this.xScale = d3
       .scalePoint()
@@ -255,8 +254,8 @@ class ParallelAxes {
       this.yScales[dimension].brush = d3
         .brushY()
         .extent([
-          [-8, this.yScales[dimension].range()[1]-5],
-          [8, this.yScales[dimension].range()[0]+5]
+          [-8, this.yScales[dimension].range()[1] - 5],
+          [8, this.yScales[dimension].range()[0] + 5]
         ])
         .on("brush end", this.brush.bind(this));
     }
@@ -316,7 +315,7 @@ class ParallelAxes {
     });
   }
 
-  createMissingDataGroup(){
+  createMissingDataGroup() {
     let yPos = this.margin.top + this.height + 50;
     this.missingDataGroup = this.svg
       .append("g")
@@ -363,11 +362,11 @@ class ParallelAxes {
 
     let linePosition = initiallyHidden ? 0 : -35;
 
-    let toggleLines = function(type){
-      if(type === "end" && !initiallyHidden)
+    let toggleLines = function(type) {
+      if (type === "end" && !initiallyHidden)
         return;
 
-      if(type === "start" && initiallyHidden)
+      if (type === "start" && initiallyHidden)
         return;
 
       this.linesGroup.selectAll("path").classed("hidden", function(datum) {
@@ -385,10 +384,10 @@ class ParallelAxes {
       .transition()
       .duration(500)
       .attr("transform", "translate(0," + linePosition + ")")
-      .on("start", function(){
+      .on("start", function() {
         toggleLines("start")
       }.bind(this))
-      .on("end", function(){
+      .on("end", function() {
         toggleLines("end")
       }.bind(this))
     //update lines to follow the moving axis
