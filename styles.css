@@ -13,14 +13,13 @@
 div.tooltip {
   position: absolute;
   text-align: center;
-  width: 200px;
-  height: 100px;
   padding: 2px;
-  font: 18px sans-serif;
-  background: lightblue;
-  border: 0px;
+  font: 12px sans-serif;
+  background-color: white;
+  border: 1px solid black;
   border-radius: 8px;
   pointer-events: none;
+  max-width: 400px;
 }
 
 .linesGroup path {

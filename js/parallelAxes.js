@@ -1,7 +1,10 @@
 class ParallelAxes {
-  constructor(data, updateScatterAxes, dimensionMetadata) {
+  constructor(data, updateScatterAxes, dimensionMetadata, tooltip, discoveryMethods) {
     this.data = data;
     this.dimensionMetadata = dimensionMetadata;
+    this.tooltip = tooltip;
+    this.discoveryMethods = discoveryMethods;
+
     this.updateScatterAxes = updateScatterAxes;
     this.margin = {
       top: 60,
@@ -49,14 +52,8 @@ class ParallelAxes {
       )
       //apply drag events to the groups
       .each(function(dimension) {
-        let axis = d3.axisLeft(self.yScales[dimension]);
-        if (self.dimensionMetadata[dimension].longLabels) {
-          //only display the first 12 chars in long text labels
-          axis.tickFormat(dim => dim.slice(0, 12));
-        }
-
-        //add axis to the group
-        d3.select(this).call(axis);
+        let target = d3.select(this);
+        self.setAxis.call(self, target, dimension);
 
         if (self.dimensionMetadata[dimension].order > 1) {
           let dropdown = d3.select(this)
@@ -84,9 +81,6 @@ class ParallelAxes {
             });
 
           dropdown.property("value", dimension)
-            // .on("focus", function(value){
-            //   this.previousValue = value;
-            // })
             .on("change", function(previousDim, num, target) {
               let newDim = target[0].value;
               let position = this.dimensionMetadata[previousDim].order;
@@ -131,6 +125,44 @@ class ParallelAxes {
     this.createMissingDataGroup();
   }
 
+  setAxis(target, dimension){
+    let axis = d3.axisLeft(this.yScales[dimension]);
+    if (this.dimensionMetadata[dimension].longLabels) {
+      //only display the first 12 chars in long text labels
+      axis.tickFormat(dim => dim.slice(0, 12));
+    }
+    if(dimension === "year"){
+      axis.tickFormat(d3.format("d"));
+    }
+    //add axis to the group
+    let axisDom = target.call(axis);
+
+    //show tooltips when hovering over certain labels
+    if(dimension === "discoveryMethod" || dimension === "facility"){
+      let self = {
+        discoveryMethods: this.discoveryMethods,
+        tooltip: this.tooltip
+      };
+      axisDom.selectAll(".tick").each(function(tickLabel) {
+        //on mouse hover show the tooltip
+        d3.select(this).on("mouseover", function(d) {
+            let html = "<h5>" + tickLabel + "</h5>";
+            if(dimension === "discoveryMethod")
+            {
+
+              let method = this.discoveryMethods.find(m => m.name === tickLabel);
+              html += "<p>" + method.description + "</p>"
+            }
+
+            this.tooltip.show(html);
+          }.bind(self))
+          .on("mouseout", function(d) {
+            this.tooltip.hide();
+          }.bind(self));
+      })
+    }
+  }
+
   update() {
     this.updateDimensions();
     this.updateScales();
@@ -149,16 +181,9 @@ class ParallelAxes {
     this.dimensionGroups
       //apply drag events to the groups
       .each(function(dimension) {
-        let axis = d3.axisLeft(self.yScales[dimension]);
-        if (self.dimensionMetadata[dimension].longLabels) {
-          //only display the first 12 chars in long text labels
-          axis.tickFormat(dim => dim.slice(0, 12));
-        }
-
-        //add axis to the group
-        d3.select(this).call(axis);
-        d3.select(this).select("select").property("value", dimension)
-
+        let target = d3.select(this);
+        self.setAxis(target, dimension)
+        target.select("select").property("value", dimension)
       });
 
     //remove brushes

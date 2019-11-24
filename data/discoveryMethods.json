@@ -1,5 +1,5 @@
 [{
-    "name": "Radial Velocity ",
+    "name": "Radial Velocity",
     "description": "The radial velocity(RV) method(sometimes referred to as the \"Doppler wobble\" method) is an indirect method for detecting exoplanets which depends on measuring the small reflex motion of a star caused by an exoplanet companion as the two orbit their common center of gravity. Since the star is so much more massive than the planet, this reflex motion is very small, typically on the order of a few to hundreds of meters per second. The motion is detected using high-resolution spectroscopy to measure tiny Doppler shifts in the stellar spectrum toward the blue or red as the star changes its velocity along the line of sight, yielding information on the mass of the planet and its orbital period and eccentricity. Reviews of the method can be found in Radial Velocity by Lovis & Fischer",
     "source": "https://exoplanetarchive.ipac.caltech.edu/applications/DocSet/index.html?doctree=/docs/docmenu.xml&startdoc=item_1_01"
   },

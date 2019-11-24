@@ -2,9 +2,10 @@ class Scatterplot {
   /**
    * Creates a Scatterplot Object
    */
-  constructor(data, dimensionMetadata) {
+  constructor(data, dimensionMetadata, tooltip) {
     this.data = data;
     this.dimensionMetadata = dimensionMetadata;
+    this.tooltip = tooltip;
   }
 
   createScatterplot() {
@@ -249,13 +250,6 @@ class Scatterplot {
         (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
     );
 
-    // Initiate hover
-    let div = d3
-      .select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("opacity", 0);
-
     let plotPoints = this.pointGroup.selectAll("circle").data(this.data);
 
     plotPoints
@@ -266,6 +260,7 @@ class Scatterplot {
       .attr("cy", d => this.yScale(d[this.selectedY.id]));
 
     // Add dots
+    let self = this;
     plotPoints
       .enter()
       .append("circle")
@@ -277,30 +272,18 @@ class Scatterplot {
       .style("fill", "#69b3a2")
       // Add hover capabilities
       .on("mouseover", function(d) {
-        div
-          .transition()
-          .duration(200)
-          .style("opacity", 0.9);
-        div
-          .html(
-            "<h5> Name: " +
-              d.name +
-              "</h5>" +
-              "<h5> Facility: " +
-              d.facility +
-              "</h5>"
-          )
-          .style("left", d3.event.pageX + 28 + "px")
-          .style("top", d3.event.pageY - 28 + "px");
+        self.tooltip.show("<h5> Name: " +
+          d.name +
+          "</h5>" +
+          "<h5> Facility: " +
+          d.facility +
+          "</h5>");
         d3.select(this)
           .attr("stroke", "black")
           .attr("r", 3);
       })
       .on("mouseout", function(d) {
-        div
-          .transition()
-          .duration(500)
-          .style("opacity", 0);
+        self.tooltip.hide();
         d3.select(this)
           .attr("stroke", "#69b3a2")
           .attr("r", 1.2);

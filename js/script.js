@@ -134,7 +134,9 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
     }
 
-    let scatterplot = new Scatterplot(data, dimensionMetadata);
+    let tooltip = new Tooltip();
+
+    let scatterplot = new Scatterplot(data, dimensionMetadata, tooltip);
     scatterplot.createScatterplot();
 
     let violin = new Violin(data, dimensionMetadata);
@@ -146,7 +148,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
       scatterplot.updateScatterplot();
     };
-    let parallelAxes = new ParallelAxes(data, updateScatterAxes, dimensionMetadata);
+    let parallelAxes = new ParallelAxes(data, updateScatterAxes, dimensionMetadata, tooltip, discoveryMethods);
 
     //GenerateDiscoveryMethodsJSON(data);
 
