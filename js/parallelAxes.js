@@ -37,7 +37,7 @@ class ParallelAxes {
       .data(this.activeDimensions);
     let self = this;
     //this.createDragEvents();
-    this.dimensionGroups
+    this.dimensionGroups = this.dimensionGroups
       .enter()
       .append("g")
       .attr("class", "dimension axis")
@@ -118,8 +118,9 @@ class ParallelAxes {
             }
 
       })
+
       //Add brush group to each axis
-      .append("g")
+      this.dimensionGroups.append("g")
       .classed("brush", true)
       .each(function(dimension) {
         d3.select(this).call(self.yScales[dimension].brush);
@@ -159,16 +160,13 @@ class ParallelAxes {
         d3.select(this).call(axis);
         d3.select(this).select("select").property("value", dimension)
 
-      })
-
-      //clear any active brushes
-      this.dimensionGroups.selectAll(".brush")
-        .each(function(dimension) {
-          d3.select(this).call(self.yScales[dimension].brush.move, null);
-        });
+      });
 
       //remove brushes
-      this.dimensionGroups.selectAll(".brush").remove()
+      //would be better code to clear colors using the brush function
+      //but can't get that to work and this is simple
+      this.linesGroup.selectAll("path").classed("active",false);
+      this.dimensionGroups.selectAll(".brush").remove();
 
       //add new brushes corresponding to new axes
       this.dimensionGroups.append("g")
