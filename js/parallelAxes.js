@@ -327,6 +327,9 @@ class ParallelAxes {
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
+        if(datum[dimension] === null)
+          return false;
+          
         return (
           activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
           yScales[dimension](datum[dimension]) <= activeBrush.extent[1]
