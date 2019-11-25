@@ -294,9 +294,6 @@ class Scatterplot {
         extent[0][0] <= self.xScale(datum[xDimension]) &&
         self.xScale(datum[xDimension]) <= extent[1][0]
 
-      //if (withinBrush) d3.select(this).raise();
-
-      //set active class on path if it is within the extent
       return withinBrush;
     });
 

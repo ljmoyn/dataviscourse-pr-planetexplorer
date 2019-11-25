@@ -367,7 +367,8 @@ class ParallelAxes {
     let button = d3.select("#incompleteDataButton");
     let initiallyHidden = button.classed("selectedButton");
 
-    d3.select("#incompleteDataButton").classed("selectedButton", !initiallyHidden);
+    let buttonText = initiallyHidden ? "Hide Incomplete Data" : "Show Incomplete Data";
+    d3.select("#incompleteDataButton").classed("selectedButton", !initiallyHidden).html(buttonText);
 
     let linePosition = initiallyHidden ? 0 : -35;
 
