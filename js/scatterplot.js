@@ -10,7 +10,12 @@ class Scatterplot {
 
   createScatterplot() {
     // set the dimensions and margins of the graph
-    this.margin = { top: 80, right: 100, bottom: 100, left: 150 };
+    this.margin = {
+      top: 80,
+      right: 100,
+      bottom: 100,
+      left: 150
+    };
     this.width = 400;
     this.height = 400;
 
@@ -24,8 +29,6 @@ class Scatterplot {
         "transform",
         "translate(" + this.margin.left + "," + this.margin.top + ")"
       );
-
-    this.pointGroup = this.svg.append("g");
 
     this.selectedX = {
       id: "distance",
@@ -46,9 +49,9 @@ class Scatterplot {
 
     this.dimensions.sort(
       function(a, b) {
-        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
-          ? 1
-          : -1;
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order ?
+          1 :
+          -1;
       }.bind(this)
     );
 
@@ -77,7 +80,7 @@ class Scatterplot {
       .style("text-anchor", "middle")
       .text(
         this.selectedY.name +
-          (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+        (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
       );
 
     //Add x axis
@@ -96,15 +99,15 @@ class Scatterplot {
       .attr(
         "transform",
         "translate(" +
-          this.width / 2 +
-          " ," +
-          (this.height + this.margin.top - 10) +
-          ")"
+        this.width / 2 +
+        " ," +
+        (this.height + this.margin.top - 10) +
+        ")"
       )
       .style("text-anchor", "middle")
       .text(
         this.selectedX.name +
-          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
 
     let self = this;
@@ -184,6 +187,18 @@ class Scatterplot {
         return dim;
       });
 
+    this.brush = d3
+      .brush()
+      .extent([
+        [this.xScale.range()[0] - 5, this.yScale.range()[1] - 5],
+        [this.xScale.range()[1] + 5, this.yScale.range()[0] + 5]
+      ])
+    .on("brush end", this.brushChange.bind(this));
+
+    this.svg.append("g").classed("brush", true).call(this.brush);
+
+    this.pointGroup = this.svg.append("g");
+
     this.updateScatterplot();
   }
 
@@ -205,7 +220,7 @@ class Scatterplot {
 
     d3.select("#xLabel").text(
       this.selectedX.name +
-        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+      (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );
 
     values = this.data.map(datum => datum[this.selectedY.id]);
@@ -218,12 +233,12 @@ class Scatterplot {
     d3.select("#yAxis").call(d3.axisLeft(this.yScale));
     d3.select("#yLabel").text(
       this.selectedY.name +
-        (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+      (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
     );
 
-    let plotPoints = this.pointGroup.selectAll("circle").data(this.data);
+    this.plotPoints = this.pointGroup.selectAll("circle").data(this.data);
 
-    plotPoints
+    this.plotPoints
       .transition()
       .duration(1000)
       //update positions of existing dots
@@ -232,14 +247,14 @@ class Scatterplot {
 
     // Add dots
     let self = this;
-    plotPoints
+    this.plotPoints
       .enter()
       .append("circle")
       .attr("cx", d => this.xScale(d[this.selectedX.id]))
       .attr("cy", d => this.yScale(d[this.selectedY.id]))
-      .attr("stroke", "#69b3a2")
-      .attr("stroke-width", 1)
-      .attr("r", 1.2)
+      .attr("stroke", "black")
+      .attr("stroke-width", 0)
+      .attr("r", 2)
       .style("fill", "#69b3a2")
       // Add hover capabilities
       .on("mouseover", function(d) {
@@ -250,16 +265,42 @@ class Scatterplot {
           d.facility +
           "</h5>");
         d3.select(this)
-          .attr("stroke", "black")
+          .attr("stroke-width", 2)
           .attr("r", 3);
       })
       .on("mouseout", function(d) {
         self.tooltip.hide();
         d3.select(this)
-          .attr("stroke", "#69b3a2")
-          .attr("r", 1.2);
+          .attr("stroke-width", 0)
+          .attr("r", 2);
       });
 
-    plotPoints.exit().remove();
+    this.plotPoints.exit().remove();
   }
+
+  brushChange() {
+
+    let self = this;
+    let yDimension = this.selectedY.id;
+    let xDimension = this.selectedX.id;
+    let extent = d3.event.selection
+
+    this.pointGroup.selectAll("circle").data(this.data).classed("activePoint", function(datum) {
+      if(extent === null)
+        return false;
+
+      let withinBrush = extent[0][1] <= self.yScale(datum[yDimension]) &&
+        self.yScale(datum[yDimension]) <= extent[1][1] &&
+        extent[0][0] <= self.xScale(datum[xDimension]) &&
+        self.xScale(datum[xDimension]) <= extent[1][0]
+
+      //if (withinBrush) d3.select(this).raise();
+
+      //set active class on path if it is within the extent
+      return withinBrush;
+    });
+
+  }
+
+
 }

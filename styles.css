@@ -37,6 +37,10 @@ div.tooltip {
   stroke: red !important;
 }
 
+.activePoint {
+  fill: red !important;
+}
+
 #missing-data line {
   stroke: black;
   stroke-width: 1px;
