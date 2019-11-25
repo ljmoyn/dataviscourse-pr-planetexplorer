@@ -56,32 +56,13 @@ class ParallelAxes {
         self.setAxis.call(self, target, dimension);
 
         if (self.dimensionMetadata[dimension].order > 1) {
-          let dropdown = d3.select(this)
-            .append("foreignObject")
-            .attr("y", -50)
-            .attr("x", -125)
-            .attr("width", 250)
-            .attr("height", 40)
-            .append("xhtml:div")
-            .append("select")
-            .classed("axisDropdown", true)
-          dropdown.selectAll("option")
-            .data(self.dimensions.filter(function(dim) {
-              return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
-            }))
-            .enter()
-            .append("option")
-            .text(function(dim) {
-              let dimensionUnit = self.dimensionMetadata[dim].unit;
-              let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-              return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
-            })
-            .attr("value", function(dim) {
-              return dim;
-            });
 
-          dropdown.property("value", dimension)
-            .on("change", function(previousDim, num, target) {
+          let options = self.dimensions.filter(function(dim) {
+            return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
+          })
+          let dropdown = new Dropdown(target, options, dimension, self.dimensionMetadata);
+
+          dropdown.select.on("change", function(previousDim, num, target) {
               let newDim = target[0].value;
               let position = this.dimensionMetadata[previousDim].order;
 
@@ -329,7 +310,7 @@ class ParallelAxes {
         let dimension = activeBrush.dimension;
         if(datum[dimension] === null)
           return false;
-          
+
         return (
           activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
           yScales[dimension](datum[dimension]) <= activeBrush.extent[1]
