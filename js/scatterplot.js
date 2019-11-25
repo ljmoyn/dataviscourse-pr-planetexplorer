@@ -192,58 +192,29 @@ class Scatterplot {
 
     let values = this.data.map(datum => datum[this.selectedX.id]);
     // Find max y value for scale
-    if (values.some(v => isNaN(v))) {
-      let uniqueValues = values.map(v => v);
-      uniqueValues = uniqueValues.filter(function(v, i) {
-        return uniqueValues.indexOf(v) == i;
-      });
-      uniqueValues.sort();
+    let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
+    this.xScale = d3
+      .scaleLinear()
+      .domain([0, xMax])
+      .range([0, this.width]);
 
-      this.xScale = d3
-        .scalePoint()
-        .domain(uniqueValues)
-        .range([0, this.width]);
-    } else {
-      let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
-      this.xScale = d3
-        .scaleLinear()
-        .domain([0, xMax])
-        .range([0, this.width]);
-    }
     d3.select("#xAxis")
       .call(d3.axisBottom(this.xScale))
       .selectAll("text")
-      .attr(
-        "transform",
-        "rotate(" +
-          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
-          ")"
-      )
       .style("text-anchor", "start");
+
     d3.select("#xLabel").text(
       this.selectedX.name +
         (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );
 
     values = this.data.map(datum => datum[this.selectedY.id]);
-    if (values.some(v => isNaN(v))) {
-      let uniqueValues = values.map(v => v);
-      uniqueValues = uniqueValues.filter(function(v, i) {
-        return uniqueValues.indexOf(v) == i;
-      });
-      uniqueValues.sort();
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
+    this.yScale = d3
+      .scaleLinear()
+      .domain([0, yMax])
+      .range([this.height, 0]);
 
-      this.yScale = d3
-        .scalePoint()
-        .domain(uniqueValues)
-        .range([this.height, 0]);
-    } else {
-      let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
-      this.yScale = d3
-        .scaleLinear()
-        .domain([0, yMax])
-        .range([this.height, 0]);
-    }
     d3.select("#yAxis").call(d3.axisLeft(this.yScale));
     d3.select("#yLabel").text(
       this.selectedY.name +
