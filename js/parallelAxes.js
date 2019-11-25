@@ -1,11 +1,12 @@
 class ParallelAxes {
-  constructor(data, updateScatterAxes, dimensionMetadata, tooltip, discoveryMethods) {
+  constructor(data, dimensionMetadata, tooltip, discoveryMethods) {
     this.data = data;
     this.dimensionMetadata = dimensionMetadata;
     this.tooltip = tooltip;
     this.discoveryMethods = discoveryMethods;
+  }
 
-    this.updateScatterAxes = updateScatterAxes;
+  createParallelAxes(){
     this.margin = {
       top: 60,
       right: 20,

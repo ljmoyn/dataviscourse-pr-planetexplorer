@@ -142,14 +142,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     let violin = new Violin(data, dimensionMetadata);
     violin.createViolin();
 
-    let updateScatterAxes = function(selectedX, selectedY) {
-      if (selectedX) scatterplot.selectedX = selectedX;
-      if (selectedY) scatterplot.selectedY = selectedY;
-
-      scatterplot.updateScatterplot();
-    };
-    let parallelAxes = new ParallelAxes(data, updateScatterAxes, dimensionMetadata, tooltip, discoveryMethods);
-
+    let parallelAxes = new ParallelAxes(data, dimensionMetadata, tooltip, discoveryMethods);
+    parallelAxes.createParallelAxes();
     //GenerateDiscoveryMethodsJSON(data);
 
     let facilities = data.map(d => d.facility);
