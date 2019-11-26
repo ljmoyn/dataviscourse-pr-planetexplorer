@@ -140,11 +140,11 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     let parallelAxes = new ParallelAxes(data, dimensionMetadata, tooltip, discoveryMethods);
 
     let updateParallelBrushes = function(xDimension, yDimension, extent){
-      parallelAxes.updateBrushesFromScatterplot(xDimension, yDimension, extent)
+      parallelAxes.updateBrushesFromScatterplot(xDimension, yDimension, extent);
     }
 
-    let updateScatterplotBrush = function(){
-
+    let updateScatterplotBrush = function(dataExtents){
+      scatterplot.updateBrushFromParallel(dataExtents);
     }
 
     scatterplot.createScatterplot(updateParallelBrushes);

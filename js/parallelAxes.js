@@ -266,7 +266,7 @@ class ParallelAxes {
           [-this.brushWidth, this.yScales[dimension].range()[1] - 5],
           [this.brushWidth, this.yScales[dimension].range()[0] + 5]
         ])
-        .on("brush end", this.brush.bind(this));
+        .on("brush end", function(){ this.brush(true) }.bind(this));
     }
   }
 
@@ -285,7 +285,7 @@ class ParallelAxes {
   }
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
-  brush() {
+  brush(userTriggered) {
     let activeBrushes = [];
     //Get currently active brushes
     this.svg
@@ -300,8 +300,14 @@ class ParallelAxes {
         });
       });
 
+    let dataExtents = null;
+    //need to know if the brush event was triggered by user action or programmatically
+    //Can get into infinite recursive calls of events without this check.
+    let userEvent = d3.event.sourceEvent.screenX && d3.event.sourceEvent.screenX !== 0 && d3.event.sourceEvent.screenY &&  d3.event.sourceEvent.screenY !== 0;
     if (activeBrushes.length === 0) {
       this.linesGroup.selectAll("path").classed("active", false);
+      if(userEvent)
+        this.updateScatterplotBrush(dataExtents);
       return;
     }
 
@@ -325,6 +331,20 @@ class ParallelAxes {
       //set active class on path if it is within the extent
       return withinBrushes;
     });
+
+    for(let i = 0; i < this.activeDimensions.length; i++){
+      let dimension = this.activeDimensions[i];
+      let activeBrush = activeBrushes.find(brush => brush.dimension === dimension)
+      if(activeBrush){
+        if(!dataExtents)
+          dataExtents = {};
+        dataExtents[dimension] = [this.yScales[dimension].invert(activeBrush.extent[0]),this.yScales[dimension].invert(activeBrush.extent[1])];
+      }
+    }
+
+    if(userEvent)
+      this.updateScatterplotBrush(dataExtents);
+
   }
 
   createMissingDataGroup() {
