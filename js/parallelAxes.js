@@ -183,7 +183,8 @@ class ParallelAxes {
     //but can't get that to work and this is simple
     this.linesGroup.selectAll("path").classed("active", false);
     this.dimensionGroups.selectAll(".brush").remove();
-
+    this.updateScatterplotBrush(null);
+    
     //add new brushes corresponding to new axes
     this.dimensionGroups.append("g")
       .classed("brush", true)
