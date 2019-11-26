@@ -124,11 +124,12 @@ class ParallelAxes {
     if(dimension === "discoveryMethod" || dimension === "facility"){
       let self = {
         discoveryMethods: this.discoveryMethods,
-        tooltip: this.tooltip
+        tooltip: this.tooltip,
+        yScales: this.yScales
       };
       axisDom.selectAll(".tick").each(function(tickLabel) {
         //on mouse hover show the tooltip
-        d3.select(this).on("mouseover", function(d) {
+        d3.select(this).on("mouseover", function() {
             let html = "<h5>" + tickLabel + "</h5>";
             if(dimension === "discoveryMethod")
             {
@@ -139,9 +140,17 @@ class ParallelAxes {
 
             this.tooltip.show(html);
           }.bind(self))
-          .on("mouseout", function(d) {
+          .on("mouseout", function() {
             this.tooltip.hide();
-          }.bind(self));
+          }.bind(self))
+          //when user clicks a label of a categorical axis, creates a brush around that label
+          .on("click", function(tickLabel,num,target){
+            let brushGroup = d3.select(this.parentNode).select(".brush");
+            let dimension = brushGroup.datum();
+            let tickLocation = self.yScales[dimension](tickLabel)
+            let extent = [tickLocation - 5, tickLocation +5];
+            brushGroup.call(self.yScales[dimension].brush.move, extent);
+          });
       })
     }
   }
@@ -334,6 +343,11 @@ class ParallelAxes {
 
     for(let i = 0; i < this.activeDimensions.length; i++){
       let dimension = this.activeDimensions[i];
+
+      //invert not supported for categorical scales, so skip them
+      if(!this.yScales[dimension].invert)
+        continue;
+
       let activeBrush = activeBrushes.find(brush => brush.dimension === dimension)
       if(activeBrush){
         if(!dataExtents)
