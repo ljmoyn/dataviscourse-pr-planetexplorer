@@ -8,7 +8,9 @@ class Scatterplot {
     this.tooltip = tooltip;
   }
 
-  createScatterplot() {
+  createScatterplot(updateParallelBrushes) {
+
+    this.updateParallelBrushes = updateParallelBrushes;
     // set the dimensions and margins of the graph
     this.margin = {
       top: 80,
@@ -194,9 +196,7 @@ class Scatterplot {
         [this.xScale.range()[1] + 5, this.yScale.range()[0] + 5]
       ])
     .on("brush end", this.brushChange.bind(this));
-
     this.svg.append("g").classed("brush", true).call(this.brush);
-
     this.pointGroup = this.svg.append("g");
 
     this.updateScatterplot();
@@ -296,6 +296,11 @@ class Scatterplot {
 
       return withinBrush;
     });
+
+    //need the extent in terms of the data, so it can be used with the scale
+    let dataExtent = extent !== null ? [[this.xScale.invert(extent[0][0]), this.yScale.invert(extent[0][1])],
+                                        [this.xScale.invert(extent[1][0]), this.yScale.invert(extent[1][1])]] : null
+    this.updateParallelBrushes(xDimension,yDimension,dataExtent);
 
   }
 

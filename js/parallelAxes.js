@@ -6,7 +6,8 @@ class ParallelAxes {
     this.discoveryMethods = discoveryMethods;
   }
 
-  createParallelAxes(){
+  createParallelAxes(updateScatterplotBrush){
+    this.updateScatterplotBrush = updateScatterplotBrush;
     this.margin = {
       top: 60,
       right: 20,
@@ -258,11 +259,12 @@ class ParallelAxes {
       }
 
       //initialize brushes for each axis
+      this.brushWidth = 8;
       this.yScales[dimension].brush = d3
         .brushY()
         .extent([
-          [-8, this.yScales[dimension].range()[1] - 5],
-          [8, this.yScales[dimension].range()[0] + 5]
+          [-this.brushWidth, this.yScales[dimension].range()[1] - 5],
+          [this.brushWidth, this.yScales[dimension].range()[0] + 5]
         ])
         .on("brush end", this.brush.bind(this));
     }
@@ -404,4 +406,20 @@ class ParallelAxes {
     //update lines to follow the moving axis
     //this.linesGroup.transition().duration(500).attr("d", this.getPath.bind(this));
   }
+
+  updateBrushesFromScatterplot(xDimension, yDimension, dataExtent){
+    let self = this;
+    this.svg.selectAll(".brush").each(function(dimension){
+      if(dimension === xDimension){
+        let extent = dataExtent !== null ? [self.yScales[dimension](dataExtent[1][0]), self.yScales[dimension](dataExtent[0][0])] : null;
+        d3.select(this).call(self.yScales[dimension].brush.move, extent);
+      }
+      else if(dimension === yDimension){
+        let extent = dataExtent !== null ? [self.yScales[dimension](dataExtent[0][1]), self.yScales[dimension](dataExtent[1][1])] : null;
+        d3.select(this).call(self.yScales[dimension].brush.move, extent);
+      }
+    })
+
+  }
+
 }
