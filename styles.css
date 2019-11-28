@@ -28,11 +28,6 @@ div.tooltip {
   stroke-opacity: 0.2;
 }
 
-.selectedButton {
-  background-color: lightblue;
-  border-color: black;
-}
-
 .active {
   stroke: red !important;
 }
@@ -88,6 +83,13 @@ div.tooltip {
   -moz-appearance: none;
 }
 
+.toggle.ios, .toggle-on.ios, .toggle-off.ios {
+    border-radius: 20rem;
+}
+
+.toggle.ios .toggle-handle {
+    border-radius: 20rem;
+}
 /* .dimension,
 .axis,
 .dimension text,

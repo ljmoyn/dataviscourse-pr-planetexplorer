@@ -1,47 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Planet Explorer</title>
-    <script src="https://d3js.org/d3.v5.js"></script>
-    <script src="https://d3js.org/d3-array.v2.min.js"></script>
-    <script src="https://d3js.org/d3-force.v2.min.js"></script>
 
-    <link
-      rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css"
-    />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-    <link
-      href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <title>Planet Explorer</title>
+  <script src="https://d3js.org/d3.v5.js"></script>
+  <script src="https://d3js.org/d3-array.v2.min.js"></script>
+  <script src="https://d3js.org/d3-force.v2.min.js"></script>
 
-  <body>
-    <header>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet" />
+  <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header>
+    <div>
       <h1 id="title">Planet Explorer</h1>
-    </header>
-    <div id="view-wrapper">
-      <div class="view">
-        <svg id="parallelAxes"></svg>
-      </div>
-      <br />
-      <div class="view">
-        <svg id="violin"></svg>
-      </div>
-      <div class="view">
-        <svg id="scatterplot"></svg>
-      </div>
     </div>
-    <script type="application/javascript" src="js/dropdown.js"></script>
-    <script type="application/javascript" src="js/parallelAxes.js"></script>
-    <script type="application/javascript" src="js/scatterplot.js"></script>
-    <script type="application/javascript" src="js/violin.js"></script>
-    <script type="application/javascript" src="js/tooltip.js"></script>
-    <script type="application/javascript" src="js/script.js"></script>
-  </body>
+  </header>
+  <div id="view-wrapper">
+    <div class="view">
+      <svg id="parallelAxes">
+      </svg>
+    </div>
+    <br />
+    <div class="view">
+      <svg id="violin"></svg>
+    </div>
+    <div class="view">
+      <svg id="scatterplot"></svg>
+    </div>
+  </div>
+  <script type="application/javascript" src="js/dropdown.js"></script>
+  <script type="application/javascript" src="js/parallelAxes.js"></script>
+  <script type="application/javascript" src="js/scatterplot.js"></script>
+  <script type="application/javascript" src="js/violin.js"></script>
+  <script type="application/javascript" src="js/tooltip.js"></script>
+  <script type="application/javascript" src="js/script.js"></script>
+</body>
+
 </html>

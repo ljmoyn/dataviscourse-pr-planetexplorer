@@ -184,7 +184,7 @@ class ParallelAxes {
     this.linesGroup.selectAll("path").classed("active", false);
     this.dimensionGroups.selectAll(".brush").remove();
     this.updateScatterplotBrush(null);
-    
+
     //add new brushes corresponding to new axes
     this.dimensionGroups.append("g")
       .classed("brush", true)
@@ -286,7 +286,7 @@ class ParallelAxes {
         function(dimension) {
           let value = datum[dimension];
           if (value === null) {
-            value = this.yScales[dimension].invert(this.height + 50);
+            value = this.yScales[dimension].invert(this.height + 54);
           }
           return [this.xScale(dimension), this.yScales[dimension](value)];
         }.bind(this)
@@ -363,7 +363,7 @@ class ParallelAxes {
   }
 
   createMissingDataGroup() {
-    let yPos = this.margin.top + this.height + 50;
+    let yPos = this.margin.top + this.height + 55;
     this.missingDataGroup = this.svg
       .append("g")
       .attr("id", "missing-data")
@@ -375,50 +375,47 @@ class ParallelAxes {
       .attr("y1", 0)
       .attr("x2", this.width)
       .attr("y2", 0);
-    this.missingDataGroup
-      .append("text")
-      .text("Missing Data")
-      .attr("transform", "translate(30,-13)");
 
     this.missingDataGroup
       .append("foreignObject")
-      .attr("y", -30)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
+      .attr("y", -38)
+      .attr("x", 20)
+      .attr("width", 250)
+      .attr("height", 40)
       .append("xhtml:div")
-      .append("button")
-      .attr("type", "button")
-      .attr("id", "incompleteDataButton")
-      .html("Hide Incomplete Data")
-      .on(
-        "click",
-        function() {
-          this.toggleIncompleteData();
-        }.bind(this)
-      );
+      .append("input")
+      .attr("type", "checkbox")
+      .attr("data-toggle", "toggle")
+      .attr("data-style", "ios")
+      .attr("data-on","Hide Incomplete Data")
+      .attr("data-off","Show Incomplete Data")
+      .attr("data-width","200")
 
+      .attr("id", "incompleteDataToggle")
+
+    //bootstrap controls need jquery to initialize and wire events
+    $("#incompleteDataToggle").bootstrapToggle();
+    $("#incompleteDataToggle").on("change", function() {
+              this.toggleIncompleteData();
+            }.bind(this))
     this.toggleIncompleteData();
   }
 
   toggleIncompleteData() {
-    let button = d3.select("#incompleteDataButton");
-    let initiallyHidden = button.classed("selectedButton");
+    let button = d3.select("#incompleteDataToggle");
+    let showData = button.property("checked");
 
-    let buttonText = initiallyHidden ? "Hide Incomplete Data" : "Show Incomplete Data";
-    d3.select("#incompleteDataButton").classed("selectedButton", !initiallyHidden).html(buttonText);
-
-    let linePosition = initiallyHidden ? 0 : -35;
+    let linePosition = showData ? 0 : -42;
 
     let toggleLines = function(type) {
-      if (type === "end" && !initiallyHidden)
+      if (type === "end" && !showData)
         return;
 
-      if (type === "start" && initiallyHidden)
+      if (type === "start" && showData)
         return;
 
       this.linesGroup.selectAll("path").classed("hidden", function(datum) {
-        if (initiallyHidden) return false;
+        if (showData) return false;
 
         for (let key in datum) {
           if (datum[key] === null) return true;
