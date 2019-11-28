@@ -62,7 +62,7 @@ class ParallelAxes {
           let options = self.dimensions.filter(function(dim) {
             return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
           })
-          let dropdown = new Dropdown(target, options, dimension, self.dimensionMetadata);
+          let dropdown = new Dropdown(target, -125, -50, 250, 60, options, dimension, self.dimensionMetadata);
 
           dropdown.select.on("change", function(previousDim, num, target) {
               let newDim = target[0].value;

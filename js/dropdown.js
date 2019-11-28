@@ -1,17 +1,27 @@
 class Dropdown {
-  constructor(target, dimensions, initialValue, metadata) {
-    this.select = target
-      .append("foreignObject")
-      .attr("y", -50)
-      .attr("x", -125)
-      .attr("width", 250)
-      .attr("height", 40)
-      .append("xhtml:div")
+  constructor(target, x, y, width, height, options, initialValue, metadata, fontSize, id, label) {
+    this.container = target.append("foreignObject")
+          .attr("x", x)
+          .attr("y", y)
+          .attr("width", width)
+          .attr("height", height)
+          .append("xhtml:div")
+
+    if(label && id){
+      this.container.append("label")
+        .attr("for",id)
+        .html(label)
+    }
+
+    this.select = this.container
       .append("select")
+      .attr("id",id)
       .classed("dropdown", true)
+      .style("margin-left", label && id ? "10px" : null)
+      .style("font-size", fontSize)
 
     this.select.selectAll("option")
-      .data(dimensions)
+      .data(options)
       .enter()
       .append("option")
       .text(function(dim) {
@@ -24,6 +34,7 @@ class Dropdown {
       });
 
     this.select.property("value", initialValue)
+
 
   }
 }
