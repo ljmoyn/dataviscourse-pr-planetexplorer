@@ -41,6 +41,129 @@ class Violin {
       }.bind(this)
     );
 
+    let self = this;
+
+    // Text to prompt x-axis dropdown
+    d3.select("#violin")
+      .append("text")
+      .attr("y", 24)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select x-axis:");
+
+    // Text to prompt y-axis dropdown
+    d3.select("#violin")
+      .append("text")
+      .attr("y", 64)
+      .attr("x", 10)
+      .attr("font-size", 12)
+      .text("Select y-axis:");
+
+    // List of variables in x-axis dropdown
+    this.xLabels = self.dimensions.filter(function(dim) {
+      return self.dimensionMetadata[dim].discrete === true;
+    });
+
+    // List of variables in y-axis dropdown
+    this.yLabels = self.dimensions.filter(function(dim) {
+      return self.dimensionMetadata[dim].discrete === undefined;
+    });
+
+    // Make dropdown for x-axis
+    let dropdownX = d3
+      .select("#violin")
+      .append("foreignObject")
+      .attr("y", 10)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .attr("font-size", 12)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownX
+      .selectAll("option")
+      .data(this.xLabels)
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
+
+    // Initialize x-axis choice
+    this.myX = this.xLabels[0];
+
+    dropdownX.on(
+      "change",
+      function(previousDim, num, target) {
+        this.myX = target[0].value;
+        this.updateViolin();
+      }.bind(this)
+    );
+
+    // Make dropdown for y-axis
+    let dropdownY = d3
+      .select("#violin")
+      .append("foreignObject")
+      .attr("y", 50)
+      .attr("x", 120)
+      .attr("width", 200)
+      .attr("height", 30)
+      .append("xhtml:div")
+      .append("select")
+      .classed("axisDropdown2", true);
+    dropdownY
+      .selectAll("option")
+      .data(this.yLabels)
+      .enter()
+      .append("option")
+      .text(function(dim) {
+        let dimensionUnit = self.dimensionMetadata[dim].unit;
+        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
+        return (
+          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        );
+      })
+      .attr("value", function(dim) {
+        return dim;
+      });
+
+    // Initialize y-axis choice
+    this.myY = this.yLabels[0];
+
+    dropdownY.on(
+      "change",
+      function(previousDim, num, target) {
+        this.myY = target[0].value;
+        this.updateViolin();
+      }.bind(this)
+    );
+
+    this.updateViolin();
+  }
+
+  updateViolin() {
+    // Set selected x in dropdown
+    this.selectedX = {
+      id: this.myX,
+      name: this.myX.charAt(0).toUpperCase() + this.myX.slice(1), // Make upper case
+      unit: this.dimensionMetadata[this.myX].unit
+    };
+
+    // Set selected y in dropdown
+    this.selectedY = {
+      id: this.myY,
+      name: this.myY.charAt(0).toUpperCase() + this.myY.slice(1), // Make upper case
+      unit: this.dimensionMetadata[this.myY].unit
+    };
+
     // Find max y value for scale
     let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
 
@@ -66,79 +189,30 @@ class Violin {
           (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
       );
 
-    // Hardcoded x-axis as "Discovery Method"
-    this.xLabels = d3
-      .map(this.data, function(d) {
-        return d.discoveryMethod;
-      })
-      .keys();
-
-    //Add x axis
-    this.xScale = d3
-      .scaleBand()
-      .range([0, this.width])
-      .domain(this.xLabels)
-      .padding(0.05);
-    this.svg
-      .append("g")
-      .attr("id", "xAxis")
-      .attr("transform", "translate(0," + this.height + ")");
-    this.svg
-      .append("text")
-      .attr("id", "xLabel")
+    // Set y-axis
+    d3.select("#yAxis")
+      .selectAll("text")
       .attr(
         "transform",
-        "translate(" +
-          this.width / 2 +
-          " ," +
-          (this.height + this.margin.top) +
-          ")" +
-          ""
+        "rotate(" +
+          (this.dimensionMetadata[this.selectedY.id].longLabels ? 30 : 0) +
+          ")"
       )
-      .style("text-anchor", "middle")
-      .text(
-        this.selectedX.name +
-          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-      );
-
-    let optionsX = this.dimensions.filter(
-      function(dim) {
-        return this.dimensionMetadata[dim].order <= 1;
-      }.bind(this)
-    );
-    let target = d3.select("#violin");
-    let dropdownX = new Dropdown(
-      target,
-      40,
-      0,
-      300,
-      35,
-      optionsX,
-      "discoveryMethod",
-      this.dimensionMetadata,
-      "12px",
-      "violinX",
-      "Select X-Axis"
+      .style("text-anchor", "start");
+    d3.select("#xLabel").text(
+      this.selectedX.name +
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );
 
-    let optionsY = this.dimensions.filter(
-      function(dim) {
-        return this.dimensionMetadata[dim].order > 1;
-      }.bind(this)
-    );
-    let dropdownY = new Dropdown(
-      target,
-      40,
-      35,
-      300,
-      35,
-      optionsY,
-      "distance",
-      this.dimensionMetadata,
-      "12px",
-      "violinY",
-      "Select Y-Axis"
-    );
+    // Discrete ticks on x-axis
+    this.xTickLabels = d3
+      .map(
+        this.data,
+        function(d) {
+          return d[this.selectedX.id];
+        }.bind(this)
+      )
+      .keys();
 
     //Add x axis
     this.xScale = d3
