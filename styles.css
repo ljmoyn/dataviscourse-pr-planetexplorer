@@ -28,11 +28,6 @@ div.tooltip {
   stroke-opacity: 0.2;
 }
 
-.selectedButton {
-  background-color: lightblue;
-  border-color: black;
-}
-
 .active {
   stroke: red !important;
 }
@@ -53,14 +48,13 @@ div.tooltip {
 /* https://css-tricks.com/styling-a-select-like-its-2019/ */
 .dropdown,
 .axisLabel {
-  display: block;
+  display: inline-block;
   font-size: 16px;
   font-family: sans-serif;
   font-weight: 700;
   color: #444;
   line-height: 1.3;
   padding: 0.6em 1.4em 0.5em 0.8em;
-  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
@@ -88,10 +82,47 @@ div.tooltip {
   -moz-appearance: none;
 }
 
-/* .dimension,
-.axis,
-.dimension text,
-.dimension path,
-.dimension g {
-  cursor: grab;
-} */
+.toggle.ios, .toggle-on.ios, .toggle-off.ios {
+    border-radius: 20rem;
+}
+
+.toggle.ios .toggle-handle {
+    border-radius: 20rem;
+}
+
+.navbar-nav {
+    float:none;
+    margin:0 auto;
+    display: block;
+    text-align: center;
+    max-height: 100px;
+}
+
+.navbar-nav > li {
+    display: inline-block;
+    float:none;
+
+    text-align: center;
+    height: 100px;
+    /* line-height: 100px; */
+    vertical-align: middle;
+    /* text-align: center; */
+    /* font-weight: bold;
+    color: black; */
+}
+
+.navbar-text{
+  max-width: 300px;
+}
+
+.navbar h1 {
+  font-weight: bold;
+}
+
+ul.vertical-list {
+  list-style: none;
+}
+
+li.vertical-list-container {
+  vertical-align: top;
+}

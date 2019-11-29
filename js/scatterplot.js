@@ -8,7 +8,9 @@ class Scatterplot {
     this.tooltip = tooltip;
   }
 
-  createScatterplot() {
+  createScatterplot(updateParallelBrushes) {
+
+    this.updateParallelBrushes = updateParallelBrushes;
     // set the dimensions and margins of the graph
     this.margin = {
       top: 80,
@@ -110,82 +112,12 @@ class Scatterplot {
         (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
 
-    let self = this;
-
-    d3.select("#scatterplot")
-      .append("text")
-      .attr("y", 24)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select x-axis:");
-
-    d3.select("#scatterplot")
-      .append("text")
-      .attr("y", 64)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select y-axis:");
-
-    let dropdownX = d3
-      .select("#scatterplot")
-      .append("foreignObject")
-      .attr("y", 10)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .attr("font-size", 12)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownX
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order > 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
-
-    let dropdownY = d3
-      .select("#scatterplot")
-      .append("foreignObject")
-      .attr("y", 50)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownY
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order > 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
+    let options = this.dimensions.filter(function(dim) {
+      return self.dimensionMetadata[dim].order > 1;
+    }.bind(this))
+    let target = d3.select("#scatterplot")
+    let dropdownX = new Dropdown(target, 40, 0, 300, 35, options, "distance", this.dimensionMetadata,"12px", "scatterX", "Select X-Axis");
+    let dropdownY = new Dropdown(target, 40, 35, 300, 35, options, "mass", this.dimensionMetadata, "12px", "scatterY", "Select Y-Axis");
 
     this.brush = d3
       .brush()
@@ -193,10 +125,8 @@ class Scatterplot {
         [this.xScale.range()[0] - 5, this.yScale.range()[1] - 5],
         [this.xScale.range()[1] + 5, this.yScale.range()[0] + 5]
       ])
-    .on("brush end", this.brushChange.bind(this));
-
+    .on("brush end", function(){ this.brushChange(true) }.bind(this));
     this.svg.append("g").classed("brush", true).call(this.brush);
-
     this.pointGroup = this.svg.append("g");
 
     this.updateScatterplot();
@@ -278,7 +208,7 @@ class Scatterplot {
     this.plotPoints.exit().remove();
   }
 
-  brushChange() {
+  brushChange(userTriggered) {
 
     let self = this;
     let yDimension = this.selectedY.id;
@@ -297,6 +227,38 @@ class Scatterplot {
       return withinBrush;
     });
 
+    //need the extent in terms of the data, so it can be used with the scale
+    let dataExtent = extent !== null ? [[this.xScale.invert(extent[0][0]), this.yScale.invert(extent[0][1])],
+                                        [this.xScale.invert(extent[1][0]), this.yScale.invert(extent[1][1])]] : null
+
+    //need to know if the brush event was triggered by user action or programmatically
+    //Programmatically won't have an screen coordinates.
+    //Can get into infinite recursive calls of events without this check.
+    if(d3.event.sourceEvent.screenX && d3.event.sourceEvent.screenX !== 0 && d3.event.sourceEvent.screenY &&  d3.event.sourceEvent.screenY !== 0)
+      this.updateParallelBrushes(xDimension,yDimension,dataExtent);
+
+  }
+
+  updateBrushFromParallel(dataExtents){
+    let brushes = this.svg.select(".brush");
+    if(!dataExtents){
+      brushes.call(this.brush.move, null)
+      return;
+    }
+
+    let newBrushExtent = [[-5,-5],[this.width+5,this.height+5]];
+    for(let key in dataExtents){
+      if(key === this.selectedX.id){
+        newBrushExtent[0][0] = this.xScale(dataExtents[key][1]);
+        newBrushExtent[1][0] = this.xScale(dataExtents[key][0]);
+      }
+      if(key === this.selectedY.id){
+        newBrushExtent[0][1] = this.yScale(dataExtents[key][0]);
+        newBrushExtent[1][1] = this.yScale(dataExtents[key][1]);
+      }
+    }
+
+    this.svg.select(".brush").call(this.brush.move, newBrushExtent)
   }
 
 
