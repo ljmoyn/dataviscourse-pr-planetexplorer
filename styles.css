@@ -101,9 +101,9 @@ div.tooltip {
 .navbar-nav > li {
     display: inline-block;
     float:none;
-
+    margin-top:5px;
     text-align: center;
-    height: 100px;
+    height: 80px;
     /* line-height: 100px; */
     vertical-align: middle;
     /* text-align: center; */
@@ -111,8 +111,22 @@ div.tooltip {
     color: black; */
 }
 
+.navbar-nav h1, .navbar-nav h3 {
+  margin-top: 0px;
+}
+
 .navbar-text{
   max-width: 300px;
+}
+
+.left-border {
+  border-left: 1.75px solid lightslategray;
+  padding-left: 10px;
+}
+
+.right-border {
+  border-right: 1.75px solid lightslategray;
+  padding-right: 10px;
 }
 
 .navbar h1 {
@@ -121,6 +135,11 @@ div.tooltip {
 
 ul.vertical-list {
   list-style: none;
+  padding-left: 10px;
+}
+
+ul.vertical-list > li {
+  margin-bottom: 5px;
 }
 
 li.vertical-list-container {
