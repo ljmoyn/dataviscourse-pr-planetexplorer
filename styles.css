@@ -89,10 +89,40 @@ div.tooltip {
 .toggle.ios .toggle-handle {
     border-radius: 20rem;
 }
-/* .dimension,
-.axis,
-.dimension text,
-.dimension path,
-.dimension g {
-  cursor: grab;
-} */
+
+.navbar-nav {
+    float:none;
+    margin:0 auto;
+    display: block;
+    text-align: center;
+    max-height: 100px;
+}
+
+.navbar-nav > li {
+    display: inline-block;
+    float:none;
+
+    text-align: center;
+    height: 100px;
+    /* line-height: 100px; */
+    vertical-align: middle;
+    /* text-align: center; */
+    /* font-weight: bold;
+    color: black; */
+}
+
+.navbar-text{
+  max-width: 300px;
+}
+
+.navbar h1 {
+  font-weight: bold;
+}
+
+ul.vertical-list {
+  list-style: none;
+}
+
+li.vertical-list-container {
+  vertical-align: top;
+}
