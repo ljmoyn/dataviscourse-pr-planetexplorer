@@ -6,7 +6,8 @@ class ParallelAxes {
     this.discoveryMethods = discoveryMethods;
   }
 
-  createParallelAxes(){
+  createParallelAxes(updateScatterplotBrush) {
+    this.updateScatterplotBrush = updateScatterplotBrush;
     this.margin = {
       top: 60,
       right: 20,
@@ -28,9 +29,10 @@ class ParallelAxes {
     this.linesGroup = this.svg
       .append("g")
       .attr("class", "linesGroup")
-      .attr("transform", "translate(0," + this.margin.top + ")")
+      .attr("transform", "translate(0," + this.margin.top + ")");
 
-    this.linesGroup.selectAll("path")
+    this.linesGroup
+      .selectAll("path")
       .data(this.data)
       .enter()
       .append("path")
@@ -57,24 +59,39 @@ class ParallelAxes {
         self.setAxis.call(self, target, dimension);
 
         if (self.dimensionMetadata[dimension].order > 1) {
-
           let options = self.dimensions.filter(function(dim) {
-            return self.dimensionMetadata[dim].order != 0 && self.dimensionMetadata[dim].order != 1 && self.dimensionMetadata[dim].hidden !== true
-          })
-          let dropdown = new Dropdown(target, options, dimension, self.dimensionMetadata);
+            return (
+              self.dimensionMetadata[dim].order != 0 &&
+              self.dimensionMetadata[dim].order != 1 &&
+              self.dimensionMetadata[dim].hidden !== true
+            );
+          });
+          let dropdown = new Dropdown(
+            target,
+            -125,
+            -50,
+            250,
+            60,
+            options,
+            dimension,
+            self.dimensionMetadata
+          );
 
-          dropdown.select.on("change", function(previousDim, num, target) {
+          dropdown.select.on(
+            "change",
+            function(previousDim, num, target) {
               let newDim = target[0].value;
               let position = this.dimensionMetadata[previousDim].order;
 
               //if switched to a column that is already displayed, want to swap positions
-              this.dimensionMetadata[previousDim].order = this.dimensionMetadata[newDim].order;
+              this.dimensionMetadata[
+                previousDim
+              ].order = this.dimensionMetadata[newDim].order;
               this.dimensionMetadata[newDim].order = position;
 
               this.update();
-
-            }.bind(self))
-
+            }.bind(self)
+          );
         } else {
           let dimensionUnit = self.dimensionMetadata[dimension].unit;
           let dimensionName =
@@ -91,11 +108,11 @@ class ParallelAxes {
               dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
             );
         }
-
-      })
+      });
 
     //Add brush group to each axis
-    this.dimensionGroups.append("g")
+    this.dimensionGroups
+      .append("g")
       .classed("brush", true)
       .each(function(dimension) {
         d3.select(this).call(self.yScales[dimension].brush);
@@ -107,41 +124,57 @@ class ParallelAxes {
     this.createMissingDataGroup();
   }
 
-  setAxis(target, dimension){
+  setAxis(target, dimension) {
     let axis = d3.axisLeft(this.yScales[dimension]);
     if (this.dimensionMetadata[dimension].longLabels) {
       //only display the first 12 chars in long text labels
       axis.tickFormat(dim => dim.slice(0, 12));
     }
-    if(dimension === "year"){
+    if (dimension === "year") {
       axis.tickFormat(d3.format("d"));
     }
     //add axis to the group
     let axisDom = target.call(axis);
 
     //show tooltips when hovering over certain labels
-    if(dimension === "discoveryMethod" || dimension === "facility"){
+    if (dimension === "discoveryMethod" || dimension === "facility") {
       let self = {
         discoveryMethods: this.discoveryMethods,
-        tooltip: this.tooltip
+        tooltip: this.tooltip,
+        yScales: this.yScales
       };
       axisDom.selectAll(".tick").each(function(tickLabel) {
         //on mouse hover show the tooltip
-        d3.select(this).on("mouseover", function(d) {
-            let html = "<h5>" + tickLabel + "</h5>";
-            if(dimension === "discoveryMethod")
-            {
+        d3.select(this)
+          .on(
+            "mouseover",
+            function() {
+              let html = "<h5>" + tickLabel + "</h5>";
+              if (dimension === "discoveryMethod") {
+                let method = this.discoveryMethods.find(
+                  m => m.name === tickLabel
+                );
+                html += "<p>" + method.description + "</p>";
+              }
 
-              let method = this.discoveryMethods.find(m => m.name === tickLabel);
-              html += "<p>" + method.description + "</p>"
-            }
-
-            this.tooltip.show(html);
-          }.bind(self))
-          .on("mouseout", function(d) {
-            this.tooltip.hide();
-          }.bind(self));
-      })
+              this.tooltip.show(html);
+            }.bind(self)
+          )
+          .on(
+            "mouseout",
+            function() {
+              this.tooltip.hide();
+            }.bind(self)
+          )
+          //when user clicks a label of a categorical axis, creates a brush around that label
+          .on("click", function(tickLabel, num, target) {
+            let brushGroup = d3.select(this.parentNode).select(".brush");
+            let dimension = brushGroup.datum();
+            let tickLocation = self.yScales[dimension](tickLabel);
+            let extent = [tickLocation - 5, tickLocation + 5];
+            brushGroup.call(self.yScales[dimension].brush.move, extent);
+          });
+      });
     }
   }
 
@@ -153,7 +186,7 @@ class ParallelAxes {
       .selectAll("path")
       .transition()
       .duration(1000)
-      .attr("d", this.getPath.bind(this))
+      .attr("d", this.getPath.bind(this));
 
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
@@ -164,8 +197,8 @@ class ParallelAxes {
       //apply drag events to the groups
       .each(function(dimension) {
         let target = d3.select(this);
-        self.setAxis(target, dimension)
-        target.select("select").property("value", dimension)
+        self.setAxis(target, dimension);
+        target.select("select").property("value", dimension);
       });
 
     //remove brushes
@@ -173,16 +206,18 @@ class ParallelAxes {
     //but can't get that to work and this is simple
     this.linesGroup.selectAll("path").classed("active", false);
     this.dimensionGroups.selectAll(".brush").remove();
+    this.updateScatterplotBrush(null);
 
     //add new brushes corresponding to new axes
-    this.dimensionGroups.append("g")
+    this.dimensionGroups
+      .append("g")
       .classed("brush", true)
       .each(function(dimension) {
         d3.select(this).call(self.yScales[dimension].brush);
       })
       .selectAll("rect")
       .attr("x", -8)
-      .attr("width", 16)
+      .attr("width", 16);
   }
 
   updateDimensions() {
@@ -194,15 +229,14 @@ class ParallelAxes {
 
     this.activeDimensions.sort(
       function(a, b) {
-        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order ?
-          1 :
-          -1;
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
+          ? 1
+          : -1;
       }.bind(this)
     );
   }
 
   updateScales() {
-
     this.xScale = d3
       .scalePoint()
       .domain(this.activeDimensions)
@@ -258,13 +292,19 @@ class ParallelAxes {
       }
 
       //initialize brushes for each axis
+      this.brushWidth = 8;
       this.yScales[dimension].brush = d3
         .brushY()
         .extent([
-          [-8, this.yScales[dimension].range()[1] - 5],
-          [8, this.yScales[dimension].range()[0] + 5]
+          [-this.brushWidth, this.yScales[dimension].range()[1] - 5],
+          [this.brushWidth, this.yScales[dimension].range()[0] + 5]
         ])
-        .on("brush end", this.brush.bind(this));
+        .on(
+          "brush end",
+          function() {
+            this.brush(true);
+          }.bind(this)
+        );
     }
   }
 
@@ -274,7 +314,7 @@ class ParallelAxes {
         function(dimension) {
           let value = datum[dimension];
           if (value === null) {
-            value = this.yScales[dimension].invert(this.height + 50);
+            value = this.yScales[dimension].invert(this.height + 54);
           }
           return [this.xScale(dimension), this.yScales[dimension](value)];
         }.bind(this)
@@ -283,7 +323,7 @@ class ParallelAxes {
   }
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
-  brush() {
+  brush(userTriggered) {
     let activeBrushes = [];
     //Get currently active brushes
     this.svg
@@ -298,8 +338,17 @@ class ParallelAxes {
         });
       });
 
+    let dataExtents = null;
+    //need to know if the brush event was triggered by user action or programmatically
+    //Can get into infinite recursive calls of events without this check.
+    let userEvent =
+      d3.event.sourceEvent.screenX &&
+      d3.event.sourceEvent.screenX !== 0 &&
+      d3.event.sourceEvent.screenY &&
+      d3.event.sourceEvent.screenY !== 0;
     if (activeBrushes.length === 0) {
       this.linesGroup.selectAll("path").classed("active", false);
+      if (userEvent) this.updateScatterplotBrush(dataExtents);
       return;
     }
 
@@ -309,8 +358,7 @@ class ParallelAxes {
       //check if current line is within the extent of every active brush
       let withinBrushes = activeBrushes.every(function(activeBrush) {
         let dimension = activeBrush.dimension;
-        if(datum[dimension] === null)
-          return false;
+        if (datum[dimension] === null) return false;
 
         return (
           activeBrush.extent[0] <= yScales[dimension](datum[dimension]) &&
@@ -323,10 +371,30 @@ class ParallelAxes {
       //set active class on path if it is within the extent
       return withinBrushes;
     });
+
+    for (let i = 0; i < this.activeDimensions.length; i++) {
+      let dimension = this.activeDimensions[i];
+
+      //invert not supported for categorical scales, so skip them
+      if (!this.yScales[dimension].invert) continue;
+
+      let activeBrush = activeBrushes.find(
+        brush => brush.dimension === dimension
+      );
+      if (activeBrush) {
+        if (!dataExtents) dataExtents = {};
+        dataExtents[dimension] = [
+          this.yScales[dimension].invert(activeBrush.extent[0]),
+          this.yScales[dimension].invert(activeBrush.extent[1])
+        ];
+      }
+    }
+
+    if (userEvent) this.updateScatterplotBrush(dataExtents);
   }
 
   createMissingDataGroup() {
-    let yPos = this.margin.top + this.height + 50;
+    let yPos = this.margin.top + this.height + 55;
     this.missingDataGroup = this.svg
       .append("g")
       .attr("id", "missing-data")
@@ -338,70 +406,99 @@ class ParallelAxes {
       .attr("y1", 0)
       .attr("x2", this.width)
       .attr("y2", 0);
-    this.missingDataGroup
-      .append("text")
-      .text("Missing Data")
-      .attr("transform", "translate(30,-13)");
 
     this.missingDataGroup
       .append("foreignObject")
-      .attr("y", -30)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
+      .attr("y", -38)
+      .attr("x", 20)
+      .attr("width", 250)
+      .attr("height", 40)
       .append("xhtml:div")
-      .append("button")
-      .attr("type", "button")
-      .attr("id", "incompleteDataButton")
-      .html("Hide Incomplete Data")
-      .on(
-        "click",
-        function() {
-          this.toggleIncompleteData();
-        }.bind(this)
-      );
+      .append("input")
+      .attr("type", "checkbox")
+      .attr("data-toggle", "toggle")
+      .attr("data-style", "ios")
+      .attr("data-on", "Hide Incomplete Data")
+      .attr("data-off", "Show Incomplete Data")
+      .attr("data-width", "200")
 
+      .attr("id", "incompleteDataToggle");
+
+    //bootstrap controls need jquery to initialize and wire events
+    $("#incompleteDataToggle").bootstrapToggle();
+    $("#incompleteDataToggle").on(
+      "change",
+      function() {
+        this.toggleIncompleteData();
+      }.bind(this)
+    );
     this.toggleIncompleteData();
   }
 
   toggleIncompleteData() {
-    let button = d3.select("#incompleteDataButton");
-    let initiallyHidden = button.classed("selectedButton");
+    let button = d3.select("#incompleteDataToggle");
+    let showData = button.property("checked");
 
-    let buttonText = initiallyHidden ? "Hide Incomplete Data" : "Show Incomplete Data";
-    d3.select("#incompleteDataButton").classed("selectedButton", !initiallyHidden).html(buttonText);
-
-    let linePosition = initiallyHidden ? 0 : -35;
+    let linePosition = showData ? 0 : -42;
 
     let toggleLines = function(type) {
-      if (type === "end" && !initiallyHidden)
-        return;
+      if (type === "end" && !showData) return;
 
-      if (type === "start" && initiallyHidden)
-        return;
+      if (type === "start" && showData) return;
 
       this.linesGroup.selectAll("path").classed("hidden", function(datum) {
-        if (initiallyHidden) return false;
+        if (showData) return false;
 
         for (let key in datum) {
           if (datum[key] === null) return true;
         }
         return false;
       });
-    }.bind(this)
+    }.bind(this);
 
     this.missingDataGroup
       .select("line")
       .transition()
       .duration(500)
       .attr("transform", "translate(0," + linePosition + ")")
-      .on("start", function() {
-        toggleLines("start")
-      }.bind(this))
-      .on("end", function() {
-        toggleLines("end")
-      }.bind(this))
+      .on(
+        "start",
+        function() {
+          toggleLines("start");
+        }.bind(this)
+      )
+      .on(
+        "end",
+        function() {
+          toggleLines("end");
+        }.bind(this)
+      );
     //update lines to follow the moving axis
     //this.linesGroup.transition().duration(500).attr("d", this.getPath.bind(this));
+  }
+
+  updateBrushesFromScatterplot(xDimension, yDimension, dataExtent) {
+    let self = this;
+    this.svg.selectAll(".brush").each(function(dimension) {
+      if (dimension === xDimension) {
+        let extent =
+          dataExtent !== null
+            ? [
+                self.yScales[dimension](dataExtent[1][0]),
+                self.yScales[dimension](dataExtent[0][0])
+              ]
+            : null;
+        d3.select(this).call(self.yScales[dimension].brush.move, extent);
+      } else if (dimension === yDimension) {
+        let extent =
+          dataExtent !== null
+            ? [
+                self.yScales[dimension](dataExtent[0][1]),
+                self.yScales[dimension](dataExtent[1][1])
+              ]
+            : null;
+        d3.select(this).call(self.yScales[dimension].brush.move, extent);
+      }
+    });
   }
 }

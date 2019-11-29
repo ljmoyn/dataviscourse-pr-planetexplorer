@@ -8,6 +8,8 @@ class Violin {
   }
 
   createViolin() {
+    // Create initial violin
+    // Will be updated with updateViolin() on click for dropdown
     // set the dimensions and margins of the graph
     this.margin = { top: 80, right: 100, bottom: 100, left: 150 };
     this.width = 1100;
@@ -24,23 +26,10 @@ class Violin {
         "translate(" + this.margin.left + "," + this.margin.top + ")"
       );
 
-    this.pointGroup = this.svg.append("g");
-
-    this.selectedX = {
-      id: "discoveryMethod",
-      name: "Discovery Method",
-      unit: this.dimensionMetadata["discoveryMethod"].unit
-    };
-
-    this.selectedY = {
-      id: "distance",
-      name: "Distance",
-      unit: this.dimensionMetadata["distance"].unit
-    };
-
+    // Get all possible options for both drop downs
     this.dimensions = d3.keys(this.dimensionMetadata).filter(
       function(dimension) {
-        return this.dimensionMetadata[dimension].order >= 0;
+        return this.dimensionMetadata[dimension].hidden !== true;
       }.bind(this)
     );
 
@@ -112,87 +101,152 @@ class Violin {
           (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
 
-    let self = this;
+    let optionsX = this.dimensions.filter(
+      function(dim) {
+        return this.dimensionMetadata[dim].order <= 1;
+      }.bind(this)
+    );
+    let target = d3.select("#violin");
+    let dropdownX = new Dropdown(
+      target,
+      40,
+      0,
+      300,
+      35,
+      optionsX,
+      "discoveryMethod",
+      this.dimensionMetadata,
+      "12px",
+      "violinX",
+      "Select X-Axis"
+    );
 
-    d3.select("#violin")
-      .append("text")
-      .attr("y", 24)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select x-axis:");
+    let optionsY = this.dimensions.filter(
+      function(dim) {
+        return this.dimensionMetadata[dim].order > 1;
+      }.bind(this)
+    );
+    let dropdownY = new Dropdown(
+      target,
+      40,
+      35,
+      300,
+      35,
+      optionsY,
+      "distance",
+      this.dimensionMetadata,
+      "12px",
+      "violinY",
+      "Select Y-Axis"
+    );
 
-    d3.select("#violin")
-      .append("text")
-      .attr("y", 64)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select y-axis:");
+    // Initialize y-axis choice
+    this.myY = this.yLabels[0];
 
-    let dropdownX = d3
-      .select("#violin")
-      .append("foreignObject")
-      .attr("y", 10)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .attr("font-size", 12)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownX
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order <= 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
-
-    let dropdownY = d3
-      .select("#violin")
-      .append("foreignObject")
-      .attr("y", 50)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownY
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order > 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
+    dropdownY.on(
+      "change",
+      function(previousDim, num, target) {
+        this.myY = target[0].value;
+        this.updateViolin();
+      }.bind(this)
+    );
 
     this.updateViolin();
   }
 
   updateViolin() {
+    // Set selected x in dropdown
+    this.selectedX = {
+      id: this.myX,
+      name: this.myX.charAt(0).toUpperCase() + this.myX.slice(1), // Make upper case
+      unit: this.dimensionMetadata[this.myX].unit
+    };
+
+    // Set selected y in dropdown
+    this.selectedY = {
+      id: this.myY,
+      name: this.myY.charAt(0).toUpperCase() + this.myY.slice(1), // Make upper case
+      unit: this.dimensionMetadata[this.myY].unit
+    };
+
+    // Find max y value for scale
+    let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
+
+    // Add Y axis
+    this.yScale = d3
+      .scaleLinear()
+      .domain([0, yMax])
+      .range([this.height, 0]);
+    this.svg
+      .append("g")
+      .attr("id", "yAxis")
+      .call(d3.axisLeft(this.yScale));
+    this.svg
+      .append("text")
+      .attr("id", "yLabel")
+      .attr(
+        "transform",
+        "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
+      )
+      .style("text-anchor", "middle")
+      .text(
+        this.selectedY.name +
+          (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+      );
+
+    // Set y-axis
+    d3.select("#yAxis")
+      .selectAll("text")
+      .attr(
+        "transform",
+        "rotate(" +
+          (this.dimensionMetadata[this.selectedY.id].longLabels ? 30 : 0) +
+          ")"
+      )
+      .style("text-anchor", "start");
+    d3.select("#xLabel").text(
+      this.selectedX.name +
+        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    );
+
+    // Discrete ticks on x-axis
+    this.xTickLabels = d3
+      .map(
+        this.data,
+        function(d) {
+          return d[this.selectedX.id];
+        }.bind(this)
+      )
+      .keys();
+
+    //Add x axis
+    this.xScale = d3
+      .scaleBand()
+      .range([0, this.width])
+      .domain(this.xTickLabels)
+      .padding(0.05);
+    this.svg
+      .append("g")
+      .attr("id", "xAxis")
+      .attr("transform", "translate(0," + this.height + ")");
+    this.svg
+      .append("text")
+      .attr("id", "xLabel")
+      .attr(
+        "transform",
+        "translate(" +
+          this.width / 2 +
+          " ," +
+          (this.height + this.margin.top) +
+          ")" +
+          ""
+      )
+      .style("text-anchor", "middle")
+      .text(
+        this.selectedX.name +
+          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+      );
+
     // Features of the histogram
     let histogram = d3
       .histogram()
@@ -203,17 +257,23 @@ class Violin {
     // Compute the binning for each group of the dataset
     let sumstat = d3
       .nest() // nest function allows to group the calculation per level of a factor
-      .key(function(d) {
-        return d.discoveryMethod;
-      })
-      .rollup(function(d) {
-        // For each key..
-        let input = d.map(function(g) {
-          return g.distance;
-        }); // Keep the variable called distance
-        let bins = histogram(input); // And compute the binning on it.
-        return bins;
-      })
+      .key(
+        function(d) {
+          return d[this.selectedX.id];
+        }.bind(this)
+      )
+      .rollup(
+        function(d) {
+          // For each key..
+          let input = d.map(
+            function(g) {
+              return g[this.selectedY.id];
+            }.bind(this)
+          ); // Keep the variable called distance
+          let bins = histogram(input); // And compute the binning on it.
+          return bins;
+        }.bind(this)
+      )
       .entries(this.data);
 
     for (let i = 0; i < sumstat.length; i++) {
@@ -251,7 +311,7 @@ class Violin {
       .attr(
         "transform",
         "rotate(" +
-          (this.dimensionMetadata[this.selectedX.id].longLabels ? 20 : 0) +
+          (this.dimensionMetadata[this.selectedX.id].longLabels ? 30 : 0) +
           ")"
       )
       .style("text-anchor", "start");
@@ -295,5 +355,12 @@ class Violin {
           )
           .curve(d3.curveCatmullRom) // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
       );
+
+    this.svg
+      .select("#violin")
+      .exit()
+      .remove();
+
+    console.log(sumstat);
   }
 }

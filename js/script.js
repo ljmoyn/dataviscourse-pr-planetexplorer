@@ -12,14 +12,14 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         density: d.pl_dens === "" ? null : Number(d.pl_dens),
         numPlanetsInSystem: d.pl_pnum === "" ? null : Number(d.pl_pnum),
         stellarName: d.pl_hostname,
-        stellarMass: d.st_mass === "" ? null : Number(d.st_masse),
+        stellarMass: d.st_mass === "" ? null : Number(d.st_mass),
         stellarRadius: d.st_rad === "" ? null : Number(d.st_rad),
         stellarTemperature: d.st_teff === "" ? null : Number(d.st_teff),
         opticalMagnitude: d.st_optmag === "" ? null : Number(d.st_optmag),
         orbitalPeriod: d.pl_orbper === "" ? null : Number(d.pl_orbper),
         orbitalSemimajorAxis: d.pl_orbsmax === "" ? null : Number(d.pl_orbsmax),
         eccentricity: d.pl_orbeccen === "" ? null : Number(d.pl_orbeccen),
-        inclination: d.pl_orbinclin === "" ? null : Number(d.pl_orbinclin),
+        inclination: d.pl_orbincl === "" ? null : Number(d.pl_orbincl),
         rightAscension: d.ra === "" ? null : Number(d.ra),
         declination: d.dec === "" ? null : Number(d.dec),
         discoveryReference: d.pl_disc_reflink,
@@ -27,7 +27,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         discoveryTelescope: d.pl_telescope,
         discoveryInstrument: d.pl_instrument,
         encyclopedia: d.pl_pelink,
-        dataExplorer: d.pl_edelink,
+        dataExplorer: d.pl_edelink
       };
       return cleanDatum;
     });
@@ -39,11 +39,13 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       },
       discoveryMethod: {
         longLabels: true,
-        order: 1
+        order: 1,
+        discrete: true
       },
       facility: {
         longLabels: true,
-        order: 0
+        order: 0,
+        discrete: true
       },
       name: {
         longLabels: true,
@@ -66,7 +68,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         unit: "g/cm^3"
       },
       numPlanetsInSystem: {
-        order: -1,
+        order: -1
       },
       stellarName: {
         longLabels: true,
@@ -113,7 +115,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         hidden: true
       },
       discoveryLocale: {
-        order: -1
+        order: -1,
+        discrete: true
       },
       discoveryTelescope: {
         order: -1,
@@ -130,20 +133,31 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       dataExplorer: {
         order: -1,
         hidden: true
-      },
-
-    }
+      }
+    };
 
     let tooltip = new Tooltip();
-
     let scatterplot = new Scatterplot(data, dimensionMetadata, tooltip);
-    scatterplot.createScatterplot();
-
     let violin = new Violin(data, dimensionMetadata);
-    violin.createViolin();
+    let parallelAxes = new ParallelAxes(
+      data,
+      dimensionMetadata,
+      tooltip,
+      discoveryMethods
+    );
 
-    let parallelAxes = new ParallelAxes(data, dimensionMetadata, tooltip, discoveryMethods);
-    parallelAxes.createParallelAxes();
+    let updateParallelBrushes = function(xDimension, yDimension, extent) {
+      parallelAxes.updateBrushesFromScatterplot(xDimension, yDimension, extent);
+    };
+
+    let updateScatterplotBrush = function(dataExtents) {
+      scatterplot.updateBrushFromParallel(dataExtents);
+    };
+
+    scatterplot.createScatterplot(updateParallelBrushes);
+    violin.createViolin();
+    parallelAxes.createParallelAxes(updateScatterplotBrush);
+
     //GenerateDiscoveryMethodsJSON(data);
 
     let facilities = data.map(d => d.facility);
