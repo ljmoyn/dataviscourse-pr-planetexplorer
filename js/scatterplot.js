@@ -112,82 +112,12 @@ class Scatterplot {
         (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
       );
 
-    let self = this;
-
-    d3.select("#scatterplot")
-      .append("text")
-      .attr("y", 24)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select x-axis:");
-
-    d3.select("#scatterplot")
-      .append("text")
-      .attr("y", 64)
-      .attr("x", 10)
-      .attr("font-size", 12)
-      .text("Select y-axis:");
-
-    let dropdownX = d3
-      .select("#scatterplot")
-      .append("foreignObject")
-      .attr("y", 10)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .attr("font-size", 12)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownX
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order > 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
-
-    let dropdownY = d3
-      .select("#scatterplot")
-      .append("foreignObject")
-      .attr("y", 50)
-      .attr("x", 120)
-      .attr("width", 200)
-      .attr("height", 30)
-      .append("xhtml:div")
-      .append("select")
-      .classed("axisDropdown2", true);
-    dropdownY
-      .selectAll("option")
-      .data(
-        self.dimensions.filter(function(dim) {
-          return self.dimensionMetadata[dim].order > 1;
-        })
-      )
-      .enter()
-      .append("option")
-      .text(function(dim) {
-        let dimensionUnit = self.dimensionMetadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return (
-          dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-        );
-      })
-      .attr("value", function(dim) {
-        return dim;
-      });
+    let options = this.dimensions.filter(function(dim) {
+      return self.dimensionMetadata[dim].order > 1;
+    }.bind(this))
+    let target = d3.select("#scatterplot")
+    let dropdownX = new Dropdown(target, 40, 0, 300, 35, options, "distance", this.dimensionMetadata,"12px", "scatterX", "Select X-Axis");
+    let dropdownY = new Dropdown(target, 40, 35, 300, 35, options, "mass", this.dimensionMetadata, "12px", "scatterY", "Select Y-Axis");
 
     this.brush = d3
       .brush()
