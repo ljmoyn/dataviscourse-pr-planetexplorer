@@ -207,7 +207,7 @@ class Scatterplot {
       )
       .range([0, this.width]);
 
-    this.svg.select("#xAxis").call(d3.axisBottom(this.xScale));
+    this.svg.select("#xAxis").call(d3.axisBottom(this.xScale).tickFormat(d3.format(".3s")));
 
     d3.select("#xLabel").text(
       this.selectedX.name +
@@ -252,27 +252,34 @@ class Scatterplot {
       .attr("cy", d => this.yScale(d[this.selectedY.id]))
       .attr("stroke", "black")
       .attr("stroke-width", 0)
-      .attr("r", 2)
-      .style("fill", "#69b3a2")
+      .attr("r", 4)
+      //.attr("opacity", .5)
+      .style("fill", "#6baed6")
       // Add hover capabilities
       .on("mouseover", function(d) {
-        self.tooltip.show(
-          "<h5> Name: " +
-            d.name +
-            "</h5>" +
-            "<h5> Facility: " +
-            d.facility +
-            "</h5>"
+        let hasDataLink = d.dataExplorer || d.encyclopedia
+        self.tooltip.show(`<h5>Name: ${d.name}</h5>
+          <h5>${self.selectedX.name}: ${d[self.selectedX.id]} ${self.selectedX.unit}</h5>
+          <h5>${self.selectedY.name}: ${d[self.selectedY.id]} ${self.selectedY.unit}</h5>
+          ${hasDataLink ? "<span><b>Click for more information.</b></span>" : ""}`
         );
         d3.select(this)
           .attr("stroke-width", 2)
-          .attr("r", 3);
+          .attr("r", 5)
+          //.attr("opacity", 1)
       })
       .on("mouseout", function(d) {
         self.tooltip.hide();
         d3.select(this)
           .attr("stroke-width", 0)
-          .attr("r", 2);
+          .attr("r", 4)
+          //.attr("opacity", .5);
+      })
+      .on("click", function(d){
+        if(d.dataExplorer)
+          window.open(d.dataExplorer,'_blank')
+        else if(d.encyclopedia)
+          window.open(d.encyclopedia,'_blank')
       });
 
     this.plotPoints.exit().remove();
