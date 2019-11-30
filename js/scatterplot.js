@@ -13,9 +13,9 @@ class Scatterplot {
     // set the dimensions and margins of the graph
     this.margin = {
       top: 80,
-      right: 100,
-      bottom: 100,
-      left: 150
+      right: 60,
+      bottom: 75,
+      left: 80
     };
     this.width = 400;
     this.height = 400;

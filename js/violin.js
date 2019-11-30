@@ -11,8 +11,8 @@ class Violin {
     // Create initial violin
     // Will be updated with updateViolin() on click for dropdown
     // set the dimensions and margins of the graph
-    this.margin = { top: 80, right: 100, bottom: 100, left: 150 };
-    this.width = 1100;
+    this.margin = { top: 80, right: 70, bottom: 100, left: 80 };
+    this.width = 1050;
     this.height = 400;
 
     // append the svg object to the body of the page
