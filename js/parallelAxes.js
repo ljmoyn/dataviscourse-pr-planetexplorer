@@ -118,7 +118,7 @@ class ParallelAxes {
     }
     //add axis to the group
     let axisDom = target.call(axis);
-
+	
     //show tooltips when hovering over certain labels
     if (dimension === "discoveryMethod" || dimension === "facility") {
       let self = {
@@ -127,8 +127,12 @@ class ParallelAxes {
         yScales: this.yScales
       };
       axisDom.selectAll(".tick").each(function(tickLabel) {
+		let tickDom = d3.select(this);
+		
+		if(dimension === "facility")
+			tickDom.select("text").style("font-size", "10px")	
         //on mouse hover show the tooltip
-        d3.select(this)
+        tickDom
           .on(
             "mouseover",
             function() {
