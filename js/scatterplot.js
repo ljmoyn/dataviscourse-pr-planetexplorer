@@ -116,7 +116,7 @@ class Scatterplot {
         [this.xScale.range()[0] - 5, this.yScale.range()[1] - 5],
         [this.xScale.range()[1] + 5, this.yScale.range()[0] + 5]
       ])
-    .on("brush end", function(){ this.brushChange(true) }.bind(this));
+    .on("brush end", this.brushChange.bind(this));
     this.svg.append("g").classed("brush", true).call(this.brush);
     this.pointGroup = this.svg.append("g");
 
@@ -193,7 +193,7 @@ class Scatterplot {
     this.plotPoints.exit().remove();
   }
 
-  brushChange(userTriggered) {
+  brushChange() {
 
     let self = this;
     let yDimension = this.selectedY.id;
@@ -231,18 +231,23 @@ class Scatterplot {
     }
 
     let newBrushExtent = [[-5,-5],[this.width+5,this.height+5]];
+    let shouldUpdate = false;
     for(let key in dataExtents){
       if(key === this.selectedX.id){
         newBrushExtent[0][0] = this.xScale(dataExtents[key][1]);
         newBrushExtent[1][0] = this.xScale(dataExtents[key][0]);
+        shouldUpdate = true;
       }
       if(key === this.selectedY.id){
         newBrushExtent[0][1] = this.yScale(dataExtents[key][0]);
         newBrushExtent[1][1] = this.yScale(dataExtents[key][1]);
+        shouldUpdate = true;
       }
     }
 
-    this.svg.select(".brush").call(this.brush.move, newBrushExtent)
+    if(shouldUpdate){
+      this.svg.select(".brush").call(this.brush.move, newBrushExtent)
+    }
   }
 
   getDataExtent(extent){

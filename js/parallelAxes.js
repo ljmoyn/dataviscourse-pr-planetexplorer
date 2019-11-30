@@ -296,9 +296,7 @@ class ParallelAxes {
         ])
         .on(
           "brush end",
-          function() {
-            this.brush(true);
-          }.bind(this)
+          this.brush.bind(this)
         );
     }
   }
@@ -318,7 +316,7 @@ class ParallelAxes {
   }
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
-  brush(userTriggered) {
+  brush() {
     //get currently active brushes
     let activeBrushes = this.getActiveBrushes();
 
