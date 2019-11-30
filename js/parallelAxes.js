@@ -11,12 +11,12 @@ class ParallelAxes {
     this.margin = {
       top: 60,
       right: 20,
-      bottom: 85,
+      bottom: 56,
       left: 20
     };
 
-    this.width = 2000;
-    this.height = 500;
+    this.width = 1840;
+    this.height = 540;
     this.svg = d3
       .select("#parallelAxes")
       .attr("width", this.width + this.margin.left + this.margin.right)

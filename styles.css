@@ -3,15 +3,20 @@
   overflow-y: hidden;
   white-space: nowrap;
   min-width:1300px;
-  margin-top: 110px
+  margin-top: 90px
 }
 
 body {
   overflow-x: hidden;
 }
 
+.navbar-nav {
+	max-height: 90px;
+}
+
 .navbar {
   min-width: 1300px;
+  max-height: 90px;
   /* overflow: auto; */
 
   margin-bottom: 0px;
