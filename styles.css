@@ -53,6 +53,11 @@ div.tooltip {
   stroke-opacity: 0.2;
 }
 
+.linesGroup path.thickLine {
+  stroke-width: 2;
+  stroke-opacity: 0.5;
+}
+
 .active {
   stroke: red !important;
 }

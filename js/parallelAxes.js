@@ -51,14 +51,25 @@ class ParallelAxes {
         let target = d3.select(this);
         self.setAxis.call(self, target, dimension);
 
-        if (self.dimensionMetadata[dimension].order > 1) {
-          let options = self.dimensions.filter(function(dim) {
-            return (
-              self.dimensionMetadata[dim].order != 0 &&
-              self.dimensionMetadata[dim].order != 1 &&
-              self.dimensionMetadata[dim].hidden !== true
-            );
-          });
+        if (self.dimensionMetadata[dimension].order > 0) {
+		  let options = null;
+		  if(self.dimensionMetadata[dimension].order === 1){
+			options = self.dimensions.filter(function(dim) {
+			  return (
+				self.dimensionMetadata[dim].discrete === true &&
+				self.dimensionMetadata[dim].hidden !== true &&
+				dim !== "facility"
+			  );
+			});			  
+		  }
+		  else {
+			options = self.dimensions.filter(function(dim) {
+			  return (
+				self.dimensionMetadata[dim].discrete !== true &&
+				self.dimensionMetadata[dim].hidden !== true
+			  );
+			});
+		  }
           let dropdown = new Dropdown(
             target,
             -125,
@@ -84,8 +95,9 @@ class ParallelAxes {
 
               this.update();
             }.bind(self)
-          );
-        } else {
+          );	
+		}
+        else {
           let dimensionUnit = self.dimensionMetadata[dimension].unit;
           let dimensionName =
             dimension.charAt(0).toUpperCase() + dimension.slice(1);
@@ -173,10 +185,12 @@ class ParallelAxes {
       .selectAll("path")
       .data(this.data)
 
-    lines.transition()
+	 //if filtered down to small dataset, increase visibility of the remaining lines
+    lines.classed("thickLine", this.data.length < 20)
+	  .transition()
       .duration(1000)
-      .attr("d", this.getPath.bind(this));
-
+      .attr("d", this.getPath.bind(this))
+	  
     lines.enter()
       .append("path")
       .attr("d", this.getPath.bind(this))
