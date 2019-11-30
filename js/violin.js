@@ -190,7 +190,7 @@ class Violin {
       );
 
     // Set y-axis
-    d3.select("#yAxis")
+    this.svg.select("#yAxis")
       .selectAll("text")
       .attr(
         "transform",
@@ -199,7 +199,7 @@ class Violin {
           ")"
       )
       .style("text-anchor", "start");
-    d3.select("#xLabel").text(
+    this.svg.select("#xLabel").text(
       this.selectedX.name +
         (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );
@@ -300,7 +300,7 @@ class Violin {
     );
 
     // Set x-axis
-    d3.select("#xAxis")
+    this.svg.select("#xAxis")
       .call(d3.axisBottom(this.xScale))
       .selectAll("text")
       .attr(
@@ -310,7 +310,7 @@ class Violin {
           ")"
       )
       .style("text-anchor", "start");
-    d3.select("#xLabel").text(
+    this.svg.select("#xLabel").text(
       this.selectedX.name +
         (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );

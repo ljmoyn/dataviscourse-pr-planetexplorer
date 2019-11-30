@@ -1,7 +1,6 @@
 class ParallelAxes {
   constructor(data, dimensionMetadata, tooltip, discoveryMethods) {
     this.data = data;
-    this.completeData = data;
     this.dimensionMetadata = dimensionMetadata;
     this.tooltip = tooltip;
     this.discoveryMethods = discoveryMethods;
@@ -162,7 +161,7 @@ class ParallelAxes {
     }
   }
 
-  update(forInit) {
+  update(forInit, leaveScatterplotAlone) {
     this.updateDimensions();
     this.updateScales();
 
@@ -199,7 +198,8 @@ class ParallelAxes {
     if(!forInit){
       this.linesGroup.selectAll("path").classed("active", false);
       this.dimensionGroups.selectAll(".brush").remove();
-      this.updateScatterplotBrush(null);
+      if(!leaveScatterplotAlone)
+        this.updateScatterplotBrush(null);
     }
     //add new brushes corresponding to new axes
     this.dimensionGroups
@@ -543,7 +543,6 @@ class ParallelAxes {
     let activeBrushes = this.getActiveBrushes();
     let dataExtents = this.getDataExtents(activeBrushes, true);
     this.data = this.data.filter(function(datum) {
-      let withinExtents = true;
       for(let dimension in dataExtents){
         if(this.dimensionMetadata[dimension].discrete && !dataExtents[dimension].includes(datum[dimension]))
           return false
@@ -554,11 +553,12 @@ class ParallelAxes {
       return true;
     }.bind(this))
 
-    this.update();
+    //Want to leave scatterplot alone becuase it will be updating axes directly after this.
+    this.update(false, true);
   }
 
-  clearFilter(){
-    this.data = this.completeData;
+  clearFilter(completeData){
+    this.data = completeData;
     this.update();
   }
 }

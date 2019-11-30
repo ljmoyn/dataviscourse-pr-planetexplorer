@@ -71,7 +71,7 @@ class Scatterplot {
     this.svg
       .append("g")
       .attr("id", "yAxis")
-      .call(d3.axisLeft(this.yScale));
+      //.call(d3.axisLeft(this.yScale));
     this.svg
       .append("text")
       .attr("id", "yLabel")
@@ -80,10 +80,6 @@ class Scatterplot {
         "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
       )
       .style("text-anchor", "middle")
-      .text(
-        this.selectedY.name +
-        (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
-      );
 
     //Add x axis
     this.xScale = d3
@@ -94,7 +90,6 @@ class Scatterplot {
       .append("g")
       .attr("id", "xAxis")
       .attr("transform", "translate(0," + this.height + ")")
-      .call(d3.axisBottom(this.xScale));
     this.svg
       .append("text")
       .attr("id", "xLabel")
@@ -107,10 +102,6 @@ class Scatterplot {
         ")"
       )
       .style("text-anchor", "middle")
-      .text(
-        this.selectedX.name +
-        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-      );
 
     let options = this.dimensions.filter(function(dim) {
       return self.dimensionMetadata[dim].order > 1;
@@ -133,41 +124,35 @@ class Scatterplot {
   }
 
   updateScatterplot() {
-    // Find max x value for scale
-
-    let values = this.data.map(datum => datum[this.selectedX.id]);
-    // Find max y value for scale
-    let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
     this.xScale = d3
       .scaleLinear()
-      .domain([0, xMax])
+      .domain(d3.extent(this.data, function(datum) {
+        return +datum[this.selectedX.id];
+      }.bind(this)))
       .range([0, this.width]);
 
-    d3.select("#xAxis")
-      .call(d3.axisBottom(this.xScale))
-      .selectAll("text")
-      .style("text-anchor", "start");
+    this.svg.select("#xAxis").call(d3.axisBottom(this.xScale));
 
     d3.select("#xLabel").text(
       this.selectedX.name +
       (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
     );
 
-    values = this.data.map(datum => datum[this.selectedY.id]);
-    let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
     this.yScale = d3
       .scaleLinear()
-      .domain([0, yMax])
+      .domain(d3.extent(this.data, function(datum) {
+        return +datum[this.selectedY.id];
+      }.bind(this)))
       .range([this.height, 0]);
 
-    d3.select("#yAxis").call(d3.axisLeft(this.yScale));
-    d3.select("#yLabel").text(
+    this.svg.select("#yAxis").call(d3.axisLeft(this.yScale));
+
+    this.svg.select("#yLabel").text(
       this.selectedY.name +
       (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
     );
 
     this.plotPoints = this.pointGroup.selectAll("circle").data(this.data);
-
     this.plotPoints
       .transition()
       .duration(1000)
@@ -228,8 +213,7 @@ class Scatterplot {
     });
 
     //need the extent in terms of the data, so it can be used with the scale
-    let dataExtent = extent !== null ? [[this.xScale.invert(extent[0][0]), this.yScale.invert(extent[0][1])],
-                                        [this.xScale.invert(extent[1][0]), this.yScale.invert(extent[1][1])]] : null
+    let dataExtent = this.getDataExtent(extent)
 
     //need to know if the brush event was triggered by user action or programmatically
     //Programmatically won't have an screen coordinates.
@@ -240,9 +224,9 @@ class Scatterplot {
   }
 
   updateBrushFromParallel(dataExtents){
-    let brushes = this.svg.select(".brush");
+    let brush = this.svg.select(".brush");
     if(!dataExtents){
-      brushes.call(this.brush.move, null)
+      brush.call(this.brush.move, null)
       return;
     }
 
@@ -260,6 +244,38 @@ class Scatterplot {
 
     this.svg.select(".brush").call(this.brush.move, newBrushExtent)
   }
+
+  getDataExtent(extent){
+    return extent !== null && extent !== undefined ? [[this.xScale.invert(extent[0][0]), this.yScale.invert(extent[0][1])],
+                              [this.xScale.invert(extent[1][0]), this.yScale.invert(extent[1][1])]] : null
+  }
+
+  filterByBrushes(){
+    let brush = this.svg.select(".brush");
+    let extent =d3.brushSelection(brush.node());// [[32.29999923706055,158.1999969482422],[250.3000030517578,364.20001220703125]]//d3.brushSelection(brush);
+
+    if(!extent)
+      return;
+    let dataExtent = this.getDataExtent(extent);
+
+    let xDimension = this.selectedX.id;
+    let yDimension = this.selectedY.id;
+    this.data = this.data.filter(function(datum) {
+        return datum[xDimension] >= dataExtent[0][0] && datum[xDimension] <= dataExtent[1][0]
+              && datum[yDimension] >= dataExtent[1][1] && datum[yDimension] <= dataExtent[0][1]
+    }.bind(this))
+
+    brush.call(this.brush.move, null)
+
+    this.updateScatterplot();
+  }
+
+  clearFilter(completeData){
+    this.data = completeData;
+    this.updateScatterplot();
+  }
+
+
 
 
 }

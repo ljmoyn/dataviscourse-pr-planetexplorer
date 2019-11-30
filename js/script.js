@@ -165,12 +165,12 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
     d3.select("#filterByBrushes").on("click", function(){
       parallelAxes.filterByBrushes();
-
+      scatterplot.filterByBrushes();
     })
 
     d3.select("#clearFilter").on("click", function(){
-      parallelAxes.clearFilter();
-
+      parallelAxes.clearFilter(data);
+      scatterplot.clearFilter(data);
     })
 
     //GenerateDiscoveryMethodsJSON(data);
