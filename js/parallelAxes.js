@@ -52,24 +52,23 @@ class ParallelAxes {
         self.setAxis.call(self, target, dimension);
 
         if (self.dimensionMetadata[dimension].order > 0) {
-		  let options = null;
-		  if(self.dimensionMetadata[dimension].order === 1){
-			options = self.dimensions.filter(function(dim) {
-			  return (
-				self.dimensionMetadata[dim].discrete === true &&
-				self.dimensionMetadata[dim].hidden !== true &&
-				dim !== "facility"
-			  );
-			});			  
-		  }
-		  else {
-			options = self.dimensions.filter(function(dim) {
-			  return (
-				self.dimensionMetadata[dim].discrete !== true &&
-				self.dimensionMetadata[dim].hidden !== true
-			  );
-			});
-		  }
+          let options = null;
+          if (self.dimensionMetadata[dimension].order === 1) {
+            options = self.dimensions.filter(function(dim) {
+              return (
+                self.dimensionMetadata[dim].discrete === true &&
+                self.dimensionMetadata[dim].hidden !== true &&
+                dim !== "facility"
+              );
+            });
+          } else {
+            options = self.dimensions.filter(function(dim) {
+              return (
+                self.dimensionMetadata[dim].discrete !== true &&
+                self.dimensionMetadata[dim].hidden !== true
+              );
+            });
+          }
           let dropdown = new Dropdown(
             target,
             -125,
@@ -95,9 +94,8 @@ class ParallelAxes {
 
               this.update();
             }.bind(self)
-          );	
-		}
-        else {
+          );
+        } else {
           let dimensionUnit = self.dimensionMetadata[dimension].unit;
           let dimensionName =
             dimension.charAt(0).toUpperCase() + dimension.slice(1);
@@ -130,7 +128,7 @@ class ParallelAxes {
     }
     //add axis to the group
     let axisDom = target.call(axis);
-	
+
     //show tooltips when hovering over certain labels
     if (dimension === "discoveryMethod" || dimension === "facility") {
       let self = {
@@ -139,10 +137,10 @@ class ParallelAxes {
         yScales: this.yScales
       };
       axisDom.selectAll(".tick").each(function(tickLabel) {
-		let tickDom = d3.select(this);
-		
-		if(dimension === "facility")
-			tickDom.select("text").style("font-size", "10px")	
+        let tickDom = d3.select(this);
+
+        if (dimension === "facility")
+          tickDom.select("text").style("font-size", "10px")
         //on mouse hover show the tooltip
         tickDom
           .on(
@@ -185,16 +183,17 @@ class ParallelAxes {
       .selectAll("path")
       .data(this.data)
 
-	 //if filtered down to small dataset, increase visibility of the remaining lines
+    //if filtered down to small dataset, increase visibility of the remaining lines
     lines.classed("thickLine", this.data.length < 20)
-	  .transition()
+      .transition()
       .duration(1000)
       .attr("d", this.getPath.bind(this))
-	  
+
     lines.enter()
       .append("path")
       .attr("d", this.getPath.bind(this))
-      .merge(lines)
+    //removed to avoid weird transitions on clear brushes
+    //.merge(lines)
     lines.exit().remove()
 
     this.dimensionGroups = this.svg
@@ -213,10 +212,10 @@ class ParallelAxes {
     //remove brushes
     //would be better code to clear colors using the brush function
     //but can't get that to work and this is simple
-    if(!forInit){
+    if (!forInit) {
       this.linesGroup.selectAll("path").classed("active", false);
       this.dimensionGroups.selectAll(".brush").remove();
-      if(!leaveScatterplotAlone)
+      if (!leaveScatterplotAlone)
         this.updateScatterplotBrush(null);
     }
     //add new brushes corresponding to new axes
@@ -242,9 +241,9 @@ class ParallelAxes {
 
     this.activeDimensions.sort(
       function(a, b) {
-        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order
-          ? 1
-          : -1;
+        return this.dimensionMetadata[a].order > this.dimensionMetadata[b].order ?
+          1 :
+          -1;
       }.bind(this)
     );
   }
@@ -466,27 +465,27 @@ class ParallelAxes {
     this.svg.selectAll(".brush").each(function(dimension) {
       if (dimension === xDimension) {
         let extent =
-          dataExtent !== null
-            ? [
-                self.yScales[dimension](dataExtent[1][0]),
-                self.yScales[dimension](dataExtent[0][0])
-              ]
-            : null;
+          dataExtent !== null ?
+          [
+            self.yScales[dimension](dataExtent[1][0]),
+            self.yScales[dimension](dataExtent[0][0])
+          ] :
+          null;
         d3.select(this).call(self.yScales[dimension].brush.move, extent);
       } else if (dimension === yDimension) {
         let extent =
-          dataExtent !== null
-            ? [
-                self.yScales[dimension](dataExtent[0][1]),
-                self.yScales[dimension](dataExtent[1][1])
-              ]
-            : null;
+          dataExtent !== null ?
+          [
+            self.yScales[dimension](dataExtent[0][1]),
+            self.yScales[dimension](dataExtent[1][1])
+          ] :
+          null;
         d3.select(this).call(self.yScales[dimension].brush.move, extent);
       }
     });
   }
 
-  getActiveBrushes(){
+  getActiveBrushes() {
     let activeBrushes = [];
     this.svg
       .selectAll(".brush")
@@ -504,7 +503,7 @@ class ParallelAxes {
   }
 
   //get extents of the active brushes, in terms of the actual data rather than pixels
-  getDataExtents(activeBrushes, includeDiscrete){
+  getDataExtents(activeBrushes, includeDiscrete) {
     let dataExtents = {};
     for (let i = 0; i < this.activeDimensions.length; i++) {
       let dimension = this.activeDimensions[i];
@@ -516,28 +515,24 @@ class ParallelAxes {
         brush => brush.dimension === dimension
       );
 
-      if(!activeBrush)
-      {
+      if (!activeBrush) {
         continue;
       }
 
-      if(this.dimensionMetadata[dimension].discrete)
-      {
-        for(let j = 0; j < this.data.length; j++){
+      if (this.dimensionMetadata[dimension].discrete) {
+        for (let j = 0; j < this.data.length; j++) {
           let pixelPosition = this.yScales[dimension](this.data[j][dimension]);
-          if(pixelPosition >= d3.min(activeBrush.extent) && pixelPosition <= d3.max(activeBrush.extent)){
-            if(!dataExtents[dimension]){
+          if (pixelPosition >= d3.min(activeBrush.extent) && pixelPosition <= d3.max(activeBrush.extent)) {
+            if (!dataExtents[dimension]) {
               dataExtents[dimension] = [];
             }
 
-            if(!dataExtents[dimension].includes(this.data[j][dimension])){
+            if (!dataExtents[dimension].includes(this.data[j][dimension])) {
               dataExtents[dimension].push(this.data[j][dimension]);
             }
           }
         }
-      }
-      else
-      {
+      } else {
         dataExtents[dimension] = [
           this.yScales[dimension].invert(activeBrush.extent[0]),
           this.yScales[dimension].invert(activeBrush.extent[1])
@@ -548,21 +543,21 @@ class ParallelAxes {
     return dataExtents;
   }
 
-  clearAllBrushes(){
+  clearAllBrushes() {
     let self = this;
     this.svg.selectAll(".brush").each(function(dimension) {
-        d3.select(this).call(self.yScales[dimension].brush.move, null);
+      d3.select(this).call(self.yScales[dimension].brush.move, null);
     });
   }
 
-  filterByBrushes(){
+  filterByBrushes() {
     let activeBrushes = this.getActiveBrushes();
     let dataExtents = this.getDataExtents(activeBrushes, true);
     this.data = this.data.filter(function(datum) {
-      for(let dimension in dataExtents){
-        if(this.dimensionMetadata[dimension].discrete && !dataExtents[dimension].includes(datum[dimension]))
+      for (let dimension in dataExtents) {
+        if (this.dimensionMetadata[dimension].discrete && !dataExtents[dimension].includes(datum[dimension]))
           return false
-        else if(!this.dimensionMetadata[dimension].discrete && (datum[dimension] > dataExtents[dimension][0] || datum[dimension] < dataExtents[dimension][1]))
+        else if (!this.dimensionMetadata[dimension].discrete && (datum[dimension] > dataExtents[dimension][0] || datum[dimension] < dataExtents[dimension][1]))
           return false;
       }
 
@@ -573,7 +568,7 @@ class ParallelAxes {
     this.update(false, true);
   }
 
-  clearFilter(completeData){
+  clearFilter(completeData) {
     this.data = completeData;
     this.update();
   }
