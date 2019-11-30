@@ -158,6 +158,21 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     violin.createViolin();
     parallelAxes.createParallelAxes(updateScatterplotBrush);
 
+    d3.select("#clearBrushes").on("click", function(){
+      //clearing brush in parallel will automatically send event to clear in scatterplot
+      parallelAxes.clearAllBrushes();
+    })
+
+    d3.select("#filterByBrushes").on("click", function(){
+      parallelAxes.filterByBrushes();
+
+    })
+
+    d3.select("#clearFilter").on("click", function(){
+      parallelAxes.clearFilter();
+
+    })
+
     //GenerateDiscoveryMethodsJSON(data);
 
     let facilities = data.map(d => d.facility);

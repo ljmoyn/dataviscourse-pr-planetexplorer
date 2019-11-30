@@ -1,6 +1,7 @@
 class ParallelAxes {
   constructor(data, dimensionMetadata, tooltip, discoveryMethods) {
     this.data = data;
+    this.completeData = data;
     this.dimensionMetadata = dimensionMetadata;
     this.tooltip = tooltip;
     this.discoveryMethods = discoveryMethods;
@@ -30,13 +31,6 @@ class ParallelAxes {
       .append("g")
       .attr("class", "linesGroup")
       .attr("transform", "translate(0," + this.margin.top + ")");
-
-    this.linesGroup
-      .selectAll("path")
-      .data(this.data)
-      .enter()
-      .append("path")
-      .attr("d", this.getPath.bind(this));
 
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
@@ -110,18 +104,8 @@ class ParallelAxes {
         }
       });
 
-    //Add brush group to each axis
-    this.dimensionGroups
-      .append("g")
-      .classed("brush", true)
-      .each(function(dimension) {
-        d3.select(this).call(self.yScales[dimension].brush);
-      })
-      .selectAll("rect")
-      .attr("x", -8)
-      .attr("width", 16);
-
     this.createMissingDataGroup();
+    this.update(true);
   }
 
   setAxis(target, dimension) {
@@ -178,15 +162,23 @@ class ParallelAxes {
     }
   }
 
-  update() {
+  update(forInit) {
     this.updateDimensions();
     this.updateScales();
 
-    this.linesGroup
+    let lines = this.linesGroup
       .selectAll("path")
-      .transition()
+      .data(this.data)
+
+    lines.transition()
       .duration(1000)
       .attr("d", this.getPath.bind(this));
+
+    lines.enter()
+      .append("path")
+      .attr("d", this.getPath.bind(this))
+      .merge(lines)
+    lines.exit().remove()
 
     this.dimensionGroups = this.svg
       .selectAll(".dimension")
@@ -204,10 +196,11 @@ class ParallelAxes {
     //remove brushes
     //would be better code to clear colors using the brush function
     //but can't get that to work and this is simple
-    this.linesGroup.selectAll("path").classed("active", false);
-    this.dimensionGroups.selectAll(".brush").remove();
-    this.updateScatterplotBrush(null);
-
+    if(!forInit){
+      this.linesGroup.selectAll("path").classed("active", false);
+      this.dimensionGroups.selectAll(".brush").remove();
+      this.updateScatterplotBrush(null);
+    }
     //add new brushes corresponding to new axes
     this.dimensionGroups
       .append("g")
@@ -218,6 +211,8 @@ class ParallelAxes {
       .selectAll("rect")
       .attr("x", -8)
       .attr("width", 16);
+
+    this.toggleIncompleteData(false);
   }
 
   updateDimensions() {
@@ -324,21 +319,9 @@ class ParallelAxes {
 
   //Source: https://stackoverflow.com/questions/46591962/d3-v4-parallel-coordinate-plot-brush-selection
   brush(userTriggered) {
-    let activeBrushes = [];
-    //Get currently active brushes
-    this.svg
-      .selectAll(".brush")
-      .filter(function(d) {
-        return d3.brushSelection(this);
-      })
-      .each(function(d) {
-        activeBrushes.push({
-          dimension: d,
-          extent: d3.brushSelection(this)
-        });
-      });
+    //get currently active brushes
+    let activeBrushes = this.getActiveBrushes();
 
-    let dataExtents = null;
     //need to know if the brush event was triggered by user action or programmatically
     //Can get into infinite recursive calls of events without this check.
     let userEvent =
@@ -348,7 +331,7 @@ class ParallelAxes {
       d3.event.sourceEvent.screenY !== 0;
     if (activeBrushes.length === 0) {
       this.linesGroup.selectAll("path").classed("active", false);
-      if (userEvent) this.updateScatterplotBrush(dataExtents);
+      if (userEvent) this.updateScatterplotBrush(null);
       return;
     }
 
@@ -372,23 +355,7 @@ class ParallelAxes {
       return withinBrushes;
     });
 
-    for (let i = 0; i < this.activeDimensions.length; i++) {
-      let dimension = this.activeDimensions[i];
-
-      //invert not supported for categorical scales, so skip them
-      if (!this.yScales[dimension].invert) continue;
-
-      let activeBrush = activeBrushes.find(
-        brush => brush.dimension === dimension
-      );
-      if (activeBrush) {
-        if (!dataExtents) dataExtents = {};
-        dataExtents[dimension] = [
-          this.yScales[dimension].invert(activeBrush.extent[0]),
-          this.yScales[dimension].invert(activeBrush.extent[1])
-        ];
-      }
-    }
+    let dataExtents = this.getDataExtents(activeBrushes);
 
     if (userEvent) this.updateScatterplotBrush(dataExtents);
   }
@@ -429,13 +396,13 @@ class ParallelAxes {
     $("#incompleteDataToggle").on(
       "change",
       function() {
-        this.toggleIncompleteData();
+        this.toggleIncompleteData(true);
       }.bind(this)
     );
     this.toggleIncompleteData();
   }
 
-  toggleIncompleteData() {
+  toggleIncompleteData(withTransition) {
     let button = d3.select("#incompleteDataToggle");
     let showData = button.property("checked");
 
@@ -459,8 +426,9 @@ class ParallelAxes {
     this.missingDataGroup
       .select("line")
       .transition()
-      .duration(500)
+      .duration(withTransition ? 500 : 0)
       .attr("transform", "translate(0," + linePosition + ")")
+      //hide the lines before/after the transition, as necessary
       .on(
         "start",
         function() {
@@ -500,5 +468,97 @@ class ParallelAxes {
         d3.select(this).call(self.yScales[dimension].brush.move, extent);
       }
     });
+  }
+
+  getActiveBrushes(){
+    let activeBrushes = [];
+    this.svg
+      .selectAll(".brush")
+      .filter(function(d) {
+        return d3.brushSelection(this);
+      })
+      .each(function(d) {
+        activeBrushes.push({
+          dimension: d,
+          extent: d3.brushSelection(this)
+        });
+      });
+
+    return activeBrushes
+  }
+
+  //get extents of the active brushes, in terms of the actual data rather than pixels
+  getDataExtents(activeBrushes, includeDiscrete){
+    let dataExtents = {};
+    for (let i = 0; i < this.activeDimensions.length; i++) {
+      let dimension = this.activeDimensions[i];
+
+      //invert not supported for categorical scales, so skip them
+      if (this.dimensionMetadata[dimension].discrete && !includeDiscrete) continue;
+
+      let activeBrush = activeBrushes.find(
+        brush => brush.dimension === dimension
+      );
+
+      if(!activeBrush)
+      {
+        continue;
+      }
+
+      if(this.dimensionMetadata[dimension].discrete)
+      {
+        for(let j = 0; j < this.data.length; j++){
+          let pixelPosition = this.yScales[dimension](this.data[j][dimension]);
+          if(pixelPosition >= d3.min(activeBrush.extent) && pixelPosition <= d3.max(activeBrush.extent)){
+            if(!dataExtents[dimension]){
+              dataExtents[dimension] = [];
+            }
+
+            if(!dataExtents[dimension].includes(this.data[j][dimension])){
+              dataExtents[dimension].push(this.data[j][dimension]);
+            }
+          }
+        }
+      }
+      else
+      {
+        dataExtents[dimension] = [
+          this.yScales[dimension].invert(activeBrush.extent[0]),
+          this.yScales[dimension].invert(activeBrush.extent[1])
+        ];
+      }
+    }
+
+    return dataExtents;
+  }
+
+  clearAllBrushes(){
+    let self = this;
+    this.svg.selectAll(".brush").each(function(dimension) {
+        d3.select(this).call(self.yScales[dimension].brush.move, null);
+    });
+  }
+
+  filterByBrushes(){
+    let activeBrushes = this.getActiveBrushes();
+    let dataExtents = this.getDataExtents(activeBrushes, true);
+    this.data = this.data.filter(function(datum) {
+      let withinExtents = true;
+      for(let dimension in dataExtents){
+        if(this.dimensionMetadata[dimension].discrete && !dataExtents[dimension].includes(datum[dimension]))
+          return false
+        else if(!this.dimensionMetadata[dimension].discrete && (datum[dimension] > dataExtents[dimension][0] || datum[dimension] < dataExtents[dimension][1]))
+          return false;
+      }
+
+      return true;
+    }.bind(this))
+
+    this.update();
+  }
+
+  clearFilter(){
+    this.data = this.completeData;
+    this.update();
   }
 }
