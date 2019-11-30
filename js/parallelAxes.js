@@ -50,67 +50,50 @@ class ParallelAxes {
       .each(function(dimension) {
         let target = d3.select(this);
         self.setAxis.call(self, target, dimension);
+        let order = self.dimensionMetadata[dimension].order;
 
-        if (self.dimensionMetadata[dimension].order > 0) {
-          let options = null;
-          if (self.dimensionMetadata[dimension].order === 1) {
-            options = self.dimensions.filter(function(dim) {
-              return (
-                self.dimensionMetadata[dim].discrete === true &&
-                self.dimensionMetadata[dim].hidden !== true &&
-                dim !== "facility"
-              );
-            });
-          } else {
-            options = self.dimensions.filter(function(dim) {
-              return (
-                self.dimensionMetadata[dim].discrete !== true &&
-                self.dimensionMetadata[dim].hidden !== true
-              );
-            });
-          }
-          let dropdown = new Dropdown(
-            target,
-            -125,
-            -50,
-            250,
-            60,
-            options,
-            dimension,
-            self.dimensionMetadata
-          );
-
-          dropdown.select.on(
-            "change",
-            function(previousDim, num, target) {
-              let newDim = target[0].value;
-              let position = this.dimensionMetadata[previousDim].order;
-
-              //if switched to a column that is already displayed, want to swap positions
-              this.dimensionMetadata[
-                previousDim
-              ].order = this.dimensionMetadata[newDim].order;
-              this.dimensionMetadata[newDim].order = position;
-
-              this.update();
-            }.bind(self)
-          );
-        } else {
-          let dimensionUnit = self.dimensionMetadata[dimension].unit;
-          let dimensionName =
-            dimension.charAt(0).toUpperCase() + dimension.slice(1);
-          //add axis label at top
-          d3.select(this)
-            .append("text")
-            .classed("axisLabel", true)
-            .attr("fill", "black")
-            .style("text-anchor", "middle")
-
-            .attr("y", -25)
-            .text(
-              dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
+        let options = null;
+        if (order < 2) {
+          options = self.dimensions.filter(function(dim) {
+            return (
+              self.dimensionMetadata[dim].discrete === true &&
+              self.dimensionMetadata[dim].hidden !== true
             );
+          });
+        } else {
+          options = self.dimensions.filter(function(dim) {
+            return (
+              self.dimensionMetadata[dim].discrete !== true &&
+              self.dimensionMetadata[dim].hidden !== true
+            );
+          });
         }
+        let dropdown = new Dropdown(
+          target,
+          order < 2 ? (order === 0 ? -75 : -100) : -125,
+          -50,
+          order < 2 ? 200 : 250,
+          40,
+          options,
+          dimension,
+          self.dimensionMetadata
+        );
+
+        dropdown.select.on(
+          "change",
+          function(previousDim, num, target) {
+            let newDim = target[0].value;
+            let position = this.dimensionMetadata[previousDim].order;
+
+            //if switched to a column that is already displayed, want to swap positions
+            this.dimensionMetadata[
+              previousDim
+            ].order = this.dimensionMetadata[newDim].order;
+            this.dimensionMetadata[newDim].order = position;
+
+            this.update();
+          }.bind(self)
+        );
       });
 
     this.createMissingDataGroup();
@@ -142,6 +125,9 @@ class ParallelAxes {
         if (dimension === "facility")
           tickDom.select("text").style("font-size", "10px")
         //on mouse hover show the tooltip
+
+        tickDom.classed("clickable", true)
+
         tickDom
           .on(
             "mouseover",
@@ -465,8 +451,7 @@ class ParallelAxes {
     this.svg.selectAll(".brush").each(function(dimension) {
       if (dimension === xDimension) {
         let extent =
-          dataExtent !== null ?
-          [
+          dataExtent !== null ? [
             self.yScales[dimension](dataExtent[1][0]),
             self.yScales[dimension](dataExtent[0][0])
           ] :
@@ -474,8 +459,7 @@ class ParallelAxes {
         d3.select(this).call(self.yScales[dimension].brush.move, extent);
       } else if (dimension === yDimension) {
         let extent =
-          dataExtent !== null ?
-          [
+          dataExtent !== null ? [
             self.yScales[dimension](dataExtent[0][1]),
             self.yScales[dimension](dataExtent[1][1])
           ] :

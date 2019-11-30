@@ -25,7 +25,7 @@ body {
   right: 0;
   left: 0;
   z-index: 1030;
-  
+
   border-bottom: 1.75px solid lightslategray
 }
 
@@ -45,6 +45,10 @@ div.tooltip {
   border-radius: 8px;
   pointer-events: none;
   max-width: 400px;
+}
+
+.clickable {
+  cursor: pointer;
 }
 
 .linesGroup path {
