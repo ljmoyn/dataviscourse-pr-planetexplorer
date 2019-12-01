@@ -37,7 +37,7 @@ body {
 
 div.tooltip {
   position: absolute;
-  text-align: center;
+  text-align: left;
   padding: 2px;
   font: 12px sans-serif;
   background-color: white;
