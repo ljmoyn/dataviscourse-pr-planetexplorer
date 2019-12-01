@@ -29,6 +29,12 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         encyclopedia: d.pl_pelink,
         dataExplorer: d.pl_edelink
       };
+
+      //typo in the actual archive data. This value has an extra 0.
+      //correct value from encyclopedia http://exoplanet.eu/catalog/11_oph_b/
+      if(cleanDatum.name === "Oph 11 b")
+        cleanDatum.orbitalPeriod = 730000
+
       return cleanDatum;
     });
 
@@ -57,7 +63,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         order: 4
       },
       year: {
-        order: 5,
+        order: -1,
         discrete: true
       },
       distance: {
@@ -90,7 +96,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         unit: "Kelvin"
       },
       orbitalPeriod: {
-        order: -1,
+        order: 5,
         unit: "days"
       },
       orbitalSemimajorAxis: {

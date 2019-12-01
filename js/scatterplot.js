@@ -263,10 +263,10 @@ class Scatterplot {
         self.tooltip.show(`<h5>Name: ${d.name}</h5>
           <h5>${
             self.selectedX.name
-          }: ${d[self.selectedX.id]} ${self.selectedX.unit}</h5>
+          }: ${d[self.selectedX.id]} ${self.selectedX.unit ? self.selectedX.unit : ""}</h5>
           <h5>${
             self.selectedY.name
-          }: ${d[self.selectedY.id]} ${self.selectedY.unit}</h5>
+          }: ${d[self.selectedY.id]} ${self.selectedY.unit ? self.selectedY.unit : ""}</h5>
           ${
             hasDataLink ? "<span><b>Click for more information.</b></span>" : ""
           }`);
