@@ -29,9 +29,9 @@ class Violin {
 
     // Initialize selected x in dropdown
     this.selectedX = {
-      id: "numPlanetsInSystem",
-      name: "NumPlanetsInSystem", // Make upper case
-      unit: this.dimensionMetadata["numPlanetsInSystem"].unit
+      id: "discoveryMethod",
+      name: "Discovery Method", // Make upper case
+      unit: this.dimensionMetadata["discoveryMethod"].unit
     };
 
     // Initialize selected y in dropdown
@@ -146,7 +146,7 @@ class Violin {
       target,
       40,
       35,
-      300,
+      350,
       35,
       this.yLabels,
       this.selectedY.id,
@@ -378,9 +378,10 @@ class Violin {
       );
 
     // Add the shape to this svg!
-    this.violin = this.violinGroup.selectAll("g").data(sumstat);
+    this.violinGroup.html(null)
 
-    this.violin
+    this.violins = this.violinGroup.selectAll("g").data(sumstat);
+    this.violins
       .enter() // So now we are working group per group
       .append("g")
       .attr(
@@ -432,9 +433,7 @@ class Violin {
           .attr("r", 4);
         //.attr("opacity", .5);
       })
-      .merge(this.violin);
-
-    this.violin.exit().remove();
+      .merge(this.violins);
 
     console.log(sumstat);
   }
