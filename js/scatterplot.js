@@ -276,6 +276,7 @@ class Scatterplot {
           //.attr("opacity", .5);
       })
       .on("click", function(d){
+        //Would be nice to keep focus on original tab, but doesn't seem to work
         if(d.dataExplorer)
           window.open(d.dataExplorer,'_blank')
         else if(d.encyclopedia)
@@ -332,18 +333,22 @@ class Scatterplot {
       [-5, -5],
       [this.width + 5, this.height + 5]
     ];
+    let updateBrush = false;
     for (let key in dataExtents) {
       if (key === this.selectedX.id) {
         newBrushExtent[0][0] = this.xScale(dataExtents[key][1]);
         newBrushExtent[1][0] = this.xScale(dataExtents[key][0]);
+        updateBrush = true;
       }
       if (key === this.selectedY.id) {
         newBrushExtent[0][1] = this.yScale(dataExtents[key][0]);
         newBrushExtent[1][1] = this.yScale(dataExtents[key][1]);
+        updateBrush = true;
       }
     }
-
-    this.svg.select(".brush").call(this.brush.move, newBrushExtent);
+    if(updateBrush){
+      this.svg.select(".brush").call(this.brush.move, newBrushExtent);
+    }
   }
 
   getDataExtent(extent) {
