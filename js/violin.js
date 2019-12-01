@@ -415,7 +415,10 @@ class Violin {
       .on("mouseover", function(d) {
         let hasDataLink = d.dataExplorer || d.encyclopedia;
         self.tooltip.show(
-          `<h5>Number of Exoplanets: ${[].concat.apply([], d).length}</h5>`
+          `<h5>Number of Exoplanets: ${[].concat.apply([], d).length}</h5>
+          <h5>Percentage of Exoplanets: ${(100 *
+            [].concat.apply([], d).length.toFixed(2)) /
+            self.data.length}%</h5>`
         );
         d3.select(this)
           .attr("stroke-width", 2)
