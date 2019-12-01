@@ -57,7 +57,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         order: 4
       },
       year: {
-        order: 5
+        order: 5,
+        discrete: true
       },
       distance: {
         unit: "Parsecs",
@@ -68,7 +69,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
         unit: "g/cm^3"
       },
       numPlanetsInSystem: {
-        order: -1
+        order: -1,
+        discrete: true
       },
       stellarName: {
         longLabels: true,
@@ -138,7 +140,7 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
 
     let tooltip = new Tooltip();
     let scatterplot = new Scatterplot(data, dimensionMetadata, tooltip);
-    let violin = new Violin(data, dimensionMetadata);
+    let violin = new Violin(data, dimensionMetadata, tooltip);
     let parallelAxes = new ParallelAxes(
       data,
       dimensionMetadata,
@@ -158,20 +160,20 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     violin.createViolin();
     parallelAxes.createParallelAxes(updateScatterplotBrush);
 
-    d3.select("#clearBrushes").on("click", function(){
+    d3.select("#clearBrushes").on("click", function() {
       //clearing brush in parallel will automatically send event to clear in scatterplot
       parallelAxes.clearAllBrushes();
-    })
+    });
 
-    d3.select("#filterByBrushes").on("click", function(){
+    d3.select("#filterByBrushes").on("click", function() {
       parallelAxes.filterByBrushes();
       scatterplot.filterByBrushes();
-    })
+    });
 
-    d3.select("#clearFilter").on("click", function(){
+    d3.select("#clearFilter").on("click", function() {
       parallelAxes.clearFilter(data);
       scatterplot.clearFilter(data);
-    })
+    });
 
     //GenerateDiscoveryMethodsJSON(data);
 

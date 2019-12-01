@@ -60,9 +60,11 @@ class Scatterplot {
     let self = this;
 
     // List of variables in x-axis dropdown
-    this.xLabels = self.dimensions.filter(function(dim) {
-      return self.dimensionMetadata[dim].discrete === undefined;
-    });
+    this.xLabels = self.dimensions
+      .filter(function(dim) {
+        return self.dimensionMetadata[dim].discrete === undefined;
+      })
+      .sort();
 
     // List of variables the same in y-axis
     this.yLabels = this.xLabels;
@@ -111,17 +113,12 @@ class Scatterplot {
       )
       .style("text-anchor", "middle");
 
-    // let options = this.dimensions.filter(
-    //   function(dim) {
-    //     return self.dimensionMetadata[dim].order > 1;
-    //   }.bind(this)
-    // );
     let target = d3.select("#scatterplot");
     let dropdownX = new Dropdown(
       target,
       40,
       0,
-      300,
+      350,
       35,
       this.xLabels,
       "distance",
@@ -149,7 +146,7 @@ class Scatterplot {
       target,
       40,
       35,
-      300,
+      350,
       35,
       this.yLabels,
       "mass",
@@ -162,7 +159,7 @@ class Scatterplot {
     dropdownY.select.on(
       "change",
       function(previousDim, num, target) {
-        // Set selected x in dropdown
+        // Set selected y in dropdown
         this.selectedY = {
           id: target[0].value,
           name:
@@ -207,13 +204,18 @@ class Scatterplot {
       )
       .range([0, this.width]);
 
-    this.svg.select("#xAxis").call(d3.axisBottom(this.xScale).tickFormat(d3.format(".3s")));
+    this.svg
+      .select("#xAxis")
+      .call(d3.axisBottom(this.xScale).tickFormat(d3.format(".3s")));
 
-    d3.select("#xLabel").text(
-      this.selectedX.name +
-        (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-    );
+    this.svg
+      .select("#xLabel")
+      .text(
+        this.selectedX.name +
+          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+      );
 
+    // Update y-axis
     this.yScale = d3
       .scaleLinear()
       .domain(
@@ -257,29 +259,32 @@ class Scatterplot {
       .style("fill", "#6baed6")
       // Add hover capabilities
       .on("mouseover", function(d) {
-        let hasDataLink = d.dataExplorer || d.encyclopedia
+        let hasDataLink = d.dataExplorer || d.encyclopedia;
         self.tooltip.show(`<h5>Name: ${d.name}</h5>
-          <h5>${self.selectedX.name}: ${d[self.selectedX.id]} ${self.selectedX.unit}</h5>
-          <h5>${self.selectedY.name}: ${d[self.selectedY.id]} ${self.selectedY.unit}</h5>
-          ${hasDataLink ? "<span><b>Click for more information.</b></span>" : ""}`
-        );
+          <h5>${
+            self.selectedX.name
+          }: ${d[self.selectedX.id]} ${self.selectedX.unit}</h5>
+          <h5>${
+            self.selectedY.name
+          }: ${d[self.selectedY.id]} ${self.selectedY.unit}</h5>
+          ${
+            hasDataLink ? "<span><b>Click for more information.</b></span>" : ""
+          }`);
         d3.select(this)
           .attr("stroke-width", 2)
-          .attr("r", 5)
-          //.attr("opacity", 1)
+          .attr("r", 5);
+        //.attr("opacity", 1)
       })
       .on("mouseout", function(d) {
         self.tooltip.hide();
         d3.select(this)
           .attr("stroke-width", 0)
-          .attr("r", 4)
-          //.attr("opacity", .5);
+          .attr("r", 4);
+        //.attr("opacity", .5);
       })
-      .on("click", function(d){
-        if(d.dataExplorer)
-          window.open(d.dataExplorer,'_blank')
-        else if(d.encyclopedia)
-          window.open(d.encyclopedia,'_blank')
+      .on("click", function(d) {
+        if (d.dataExplorer) window.open(d.dataExplorer, "_blank");
+        else if (d.encyclopedia) window.open(d.encyclopedia, "_blank");
       });
 
     this.plotPoints.exit().remove();
@@ -332,18 +337,22 @@ class Scatterplot {
       [-5, -5],
       [this.width + 5, this.height + 5]
     ];
+    let updateBrush = false;
     for (let key in dataExtents) {
       if (key === this.selectedX.id) {
         newBrushExtent[0][0] = this.xScale(dataExtents[key][1]);
         newBrushExtent[1][0] = this.xScale(dataExtents[key][0]);
+        updateBrush = true;
       }
       if (key === this.selectedY.id) {
         newBrushExtent[0][1] = this.yScale(dataExtents[key][0]);
         newBrushExtent[1][1] = this.yScale(dataExtents[key][1]);
+        updateBrush = true;
       }
     }
-
-    this.svg.select(".brush").call(this.brush.move, newBrushExtent);
+    if (updateBrush) {
+      this.svg.select(".brush").call(this.brush.move, newBrushExtent);
+    }
   }
 
   getDataExtent(extent) {

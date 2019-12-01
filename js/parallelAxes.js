@@ -68,6 +68,8 @@ class ParallelAxes {
             );
           });
         }
+
+        options.sort();
         let dropdown = new Dropdown(
           target,
           order < 2 ? (order === 0 ? -75 : -100) : -125,

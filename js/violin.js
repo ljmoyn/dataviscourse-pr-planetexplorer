@@ -2,9 +2,10 @@ class Violin {
   /**
    * Creates a Scatterplot Object
    */
-  constructor(data, dimensionMetadata) {
+  constructor(data, dimensionMetadata, tooltip) {
     this.data = data;
     this.dimensionMetadata = dimensionMetadata;
+    this.tooltip = tooltip;
   }
 
   createViolin() {
@@ -26,6 +27,20 @@ class Violin {
         "translate(" + this.margin.left + "," + this.margin.top + ")"
       );
 
+    // Initialize selected x in dropdown
+    this.selectedX = {
+      id: "numPlanetsInSystem",
+      name: "NumPlanetsInSystem", // Make upper case
+      unit: this.dimensionMetadata["numPlanetsInSystem"].unit
+    };
+
+    // Initialize selected y in dropdown
+    this.selectedY = {
+      id: "distance",
+      name: "Distance", // Make upper case
+      unit: this.dimensionMetadata["distance"].unit
+    };
+
     // Get all possible options for both drop downs
     this.dimensions = d3.keys(this.dimensionMetadata).filter(
       function(dimension) {
@@ -43,22 +58,6 @@ class Violin {
 
     let self = this;
 
-    // // Text to prompt x-axis dropdown
-    // d3.select("#violin")
-    //   .append("text")
-    //   .attr("y", 24)
-    //   .attr("x", 10)
-    //   .attr("font-size", 12)
-    //   .text("Select x-axis:");
-
-    // // Text to prompt y-axis dropdown
-    // d3.select("#violin")
-    //   .append("text")
-    //   .attr("y", 64)
-    //   .attr("x", 10)
-    //   .attr("font-size", 12)
-    //   .text("Select y-axis:");
-
     // List of variables in x-axis dropdown
     this.xLabels = self.dimensions.filter(function(dim) {
       return self.dimensionMetadata[dim].discrete === true;
@@ -69,140 +68,8 @@ class Violin {
       return self.dimensionMetadata[dim].discrete === undefined;
     });
 
-    // Make dropdown for x-axis
-    // let dropdownX = d3
-    //   .select("#violin")
-    //   .append("foreignObject")
-    //   .attr("y", 10)
-    //   .attr("x", 120)
-    //   .attr("width", 200)
-    //   .attr("height", 30)
-    //   .attr("font-size", 12)
-    //   .append("xhtml:div")
-    //   .append("select")
-    //   .classed("axisDropdown2", true);
-    // dropdownX
-    //   .selectAll("option")
-    //   .data(this.xLabels)
-    //   .enter()
-    //   .append("option")
-    //   .text(function(dim) {
-    //     let dimensionUnit = self.dimensionMetadata[dim].unit;
-    //     let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-    //     return (
-    //       dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-    //     );
-    //   })
-    //   .attr("value", function(dim) {
-    //     return dim;
-    //   });
-
-    // Initialize x-axis choice
-    this.myX = this.xLabels[0];
-
-    let target = d3.select("#violin");
-    let dropdownX = new Dropdown(
-      target,
-      40,
-      0,
-      300,
-      35,
-      this.xLabels,
-      "discoveryLocale",
-      this.dimensionMetadata,
-      "12px",
-      "violinX",
-      "Select X-Axis"
-    );
-
-    dropdownX.select.on(
-      "change",
-      function(previousDim, num, target) {
-        this.updateViolin();
-      }.bind(this)
-    );
-
-    // Initialize y-axis choice
-    this.myY = this.yLabels[0];
-
-    // Make y-axis dropdown
-    let dropdownY = new Dropdown(
-      target,
-      40,
-      35,
-      300,
-      35,
-      this.yLabels,
-      "declination",
-      this.dimensionMetadata,
-      "12px",
-      "violinY",
-      "Select Y-Axis"
-    );
-
-    dropdownY.select.on(
-      "change",
-      function(previousDim, num, target) {
-        this.myY = target[0].value;
-        this.updateViolin();
-      }.bind(this)
-    );
-
-    // // Make dropdown for y-axis
-    // let dropdownY = d3
-    //   .select("#violin")
-    //   .append("foreignObject")
-    //   .attr("y", 50)
-    //   .attr("x", 120)
-    //   .attr("width", 200)
-    //   .attr("height", 30)
-    //   .append("xhtml:div")
-    //   .append("select")
-    //   .classed("axisDropdown2", true);
-    // dropdownY
-    //   .selectAll("option")
-    //   .data(this.yLabels)
-    //   .enter()
-    //   .append("option")
-    //   .text(function(dim) {
-    //     let dimensionUnit = self.dimensionMetadata[dim].unit;
-    //     let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-    //     return (
-    //       dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "")
-    //     );
-    //   })
-    //   .attr("value", function(dim) {
-    //     return dim;
-    //   });
-
-    // // Initialize y-axis choice
-    // this.myY = this.yLabels[0];
-
-    // dropdownY.on(
-    //   "change",
-    //   function(previousDim, num, target) {
-    //     this.myY = target[0].value;
-    //     this.updateViolin();
-    //   }.bind(this)
-    // );
-
-    this.updateViolin();
-  }
-
-  updateViolin() {
-    // Set selected x in dropdown
-    this.selectedX = {
-      id: this.myX,
-      name: this.myX.charAt(0).toUpperCase() + this.myX.slice(1), // Make upper case
-      unit: this.dimensionMetadata[this.myX].unit
-    };
-
-    // Set selected y in dropdown
-    this.selectedY = {
-      id: this.myY,
-      name: this.myY.charAt(0).toUpperCase() + this.myY.slice(1), // Make upper case
-      unit: this.dimensionMetadata[this.myY].unit
-    };
+    // Find max x value for scale
+    let xMax = d3.max(this.data.map(d => d[this.selectedX.id]));
 
     // Find max y value for scale
     let yMax = d3.max(this.data.map(d => d[this.selectedY.id]));
@@ -212,10 +79,8 @@ class Violin {
       .scaleLinear()
       .domain([0, yMax])
       .range([this.height, 0]);
-    this.svg
-      .append("g")
-      .attr("id", "yAxis")
-      .call(d3.axisLeft(this.yScale));
+    this.svg.append("g").attr("id", "yAxis");
+    //.call(d3.axisLeft(this.yScale));
     this.svg
       .append("text")
       .attr("id", "yLabel")
@@ -223,23 +88,174 @@ class Violin {
         "transform",
         "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
       )
-      .style("text-anchor", "middle")
+      .style("text-anchor", "middle");
+
+    //Add x axis
+    this.xScale = d3
+      .scaleLinear()
+      .domain([0, xMax])
+      .range([0, this.width]);
+    this.svg
+      .append("g")
+      .attr("id", "xAxis")
+      .attr("transform", "translate(0," + this.height + ")");
+    this.svg
+      .append("text")
+      .attr("id", "xLabel")
+      .attr(
+        "transform",
+        "translate(" +
+          this.width / 2 +
+          " ," +
+          (this.height + this.margin.top - 10) +
+          ")"
+      )
+      .style("text-anchor", "middle");
+
+    let target = d3.select("#violin");
+    let dropdownX = new Dropdown(
+      target,
+      40,
+      0,
+      300,
+      35,
+      this.xLabels,
+      this.selectedX.id,
+      this.dimensionMetadata,
+      "12px",
+      "violinX",
+      "Select X-Axis"
+    );
+
+    dropdownX.select.on(
+      "change",
+      function(previousDim, num, target) {
+        // Set selected x in dropdown
+        this.selectedX = {
+          id: target[0].value,
+          name:
+            target[0].value.charAt(0).toUpperCase() + target[0].value.slice(1), // Make upper case
+          unit: this.dimensionMetadata[target[0].value].unit
+        };
+        this.updateViolin();
+      }.bind(this)
+    );
+
+    // Make y-axis dropdown
+    let dropdownY = new Dropdown(
+      target,
+      40,
+      35,
+      300,
+      35,
+      this.yLabels,
+      this.selectedY.id,
+      this.dimensionMetadata,
+      "12px",
+      "violinY",
+      "Select Y-Axis"
+    );
+
+    dropdownY.select.on(
+      "change",
+      function(previousDim, num, target) {
+        // Set selected x in dropdown
+        this.selectedY = {
+          id: target[0].value,
+          name:
+            target[0].value.charAt(0).toUpperCase() + target[0].value.slice(1), // Make upper case
+          unit: this.dimensionMetadata[target[0].value].unit
+        };
+        this.updateViolin();
+      }.bind(this)
+    );
+
+    this.violinGroup = this.svg.append("g");
+
+    this.updateViolin();
+  }
+
+  updateViolin() {
+    // Update y-axis
+    this.yScale = d3
+      .scaleLinear()
+      .domain(
+        d3.extent(
+          this.data,
+          function(datum) {
+            return +datum[this.selectedY.id];
+          }.bind(this)
+        )
+      )
+      .range([this.height, 0]);
+
+    this.svg.select("#yAxis").call(d3.axisLeft(this.yScale));
+
+    let self = this;
+
+    this.svg
+      .select("#yLabel")
       .text(
         this.selectedY.name +
           (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
       );
 
-    // Set y-axis
+    // // Add Y axis
+    // this.yScale = d3
+    //   .scaleLinear()
+    //   .domain([0, yMax])
+    //   .range([this.height, 0]);
+    // this.svg
+    //   .append("g")
+    //   .attr("id", "yAxis")
+    //   .call(d3.axisLeft(this.yScale));
+    // this.svg
+    //   .append("text")
+    //   .attr("id", "yLabel")
+    //   .attr(
+    //     "transform",
+    //     "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
+    //   )
+    //   .style("text-anchor", "middle")
+    //   .text(
+    //     this.selectedY.name +
+    //       (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
+    //   );
+
+    // // Set y-axis
+    // this.svg
+    //   .select("#yAxis")
+    //   .selectAll("text")
+    //   .attr(
+    //     "transform",
+    //     "rotate(" +
+    //       (this.dimensionMetadata[this.selectedY.id].longLabels ? 30 : 0) +
+    //       ")"
+    //   )
+    //   .style("text-anchor", "start");
+    // this.svg
+    //   .select("#xLabel")
+    //   .text(
+    //     this.selectedX.name +
+    //       (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    //   );
+
+    // this.xScale = d3
+    //   .scaleBand()
+    //   .domain(
+    //     d3.extent(
+    //       this.data,
+    //       function(datum) {
+    //         return +datum[this.selectedX.id];
+    //       }.bind(this)
+    //     )
+    //   )
+    //   .range([0, this.width]);
+
     this.svg
-      .select("#yAxis")
-      .selectAll("text")
-      .attr(
-        "transform",
-        "rotate(" +
-          (this.dimensionMetadata[this.selectedY.id].longLabels ? 30 : 0) +
-          ")"
-      )
-      .style("text-anchor", "start");
+      .select("#xAxis")
+      .call(d3.axisBottom(this.xScale).tickFormat(d3.format(".3s")));
+
     this.svg
       .select("#xLabel")
       .text(
@@ -263,27 +279,27 @@ class Violin {
       .range([0, this.width])
       .domain(this.xTickLabels)
       .padding(0.05);
-    this.svg
-      .append("g")
-      .attr("id", "xAxis")
-      .attr("transform", "translate(0," + this.height + ")");
-    this.svg
-      .append("text")
-      .attr("id", "xLabel")
-      .attr(
-        "transform",
-        "translate(" +
-          this.width / 2 +
-          " ," +
-          (this.height + this.margin.top) +
-          ")" +
-          ""
-      )
-      .style("text-anchor", "middle")
-      .text(
-        this.selectedX.name +
-          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-      );
+    // this.svg
+    //   .append("g")
+    //   .attr("id", "xAxis")
+    //   .attr("transform", "translate(0," + this.height + ")");
+    // this.svg
+    //   .append("text")
+    //   .attr("id", "xLabel")
+    //   .attr(
+    //     "transform",
+    //     "translate(" +
+    //       this.width / 2 +
+    //       " ," +
+    //       (this.height + this.margin.top) +
+    //       ")" +
+    //       ""
+    //   )
+    //   .style("text-anchor", "middle")
+    //   .text(
+    //     this.selectedX.name +
+    //       (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
+    //   );
 
     // Features of the histogram
     let histogram = d3
@@ -362,9 +378,9 @@ class Violin {
       );
 
     // Add the shape to this svg!
-    this.svg
-      .selectAll("myViolin")
-      .data(sumstat)
+    this.violin = this.violinGroup.selectAll("g").data(sumstat);
+
+    this.violin
       .enter() // So now we are working group per group
       .append("g")
       .attr(
@@ -378,7 +394,7 @@ class Violin {
         return d.value;
       })
       .style("stroke", "none")
-      .style("fill", "#69b3a2")
+      .style("fill", "#6baed6")
       .attr(
         "d",
         d3
@@ -395,12 +411,27 @@ class Violin {
             }.bind(this)
           )
           .curve(d3.curveCatmullRom) // This makes the line smoother to give the violin appearance. Try d3.curveStep to see the difference
-      );
+      )
+      .on("mouseover", function(d) {
+        let hasDataLink = d.dataExplorer || d.encyclopedia;
+        self.tooltip.show(
+          `<h5>Number of Exoplanets: ${[].concat.apply([], d).length}</h5>`
+        );
+        d3.select(this)
+          .attr("stroke-width", 2)
+          .attr("r", 5);
+        //.attr("opacity", 1)
+      })
+      .on("mouseout", function(d) {
+        self.tooltip.hide();
+        d3.select(this)
+          .attr("stroke-width", 0)
+          .attr("r", 4);
+        //.attr("opacity", .5);
+      })
+      .merge(this.violin);
 
-    this.svg
-      .select("#violin")
-      .exit()
-      .remove();
+    this.violin.exit().remove();
 
     console.log(sumstat);
   }
