@@ -283,6 +283,7 @@ class Scatterplot {
         //.attr("opacity", .5);
       })
       .on("click", function(d) {
+        //Would be nice to keep focus on original tab, but doesn't seem to work
         if (d.dataExplorer) window.open(d.dataExplorer, "_blank");
         else if (d.encyclopedia) window.open(d.encyclopedia, "_blank");
       });
