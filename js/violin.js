@@ -378,7 +378,7 @@ class Violin {
       );
 
     // Add the shape to this svg!
-    this.violinGroup.html(null)
+    this.violinGroup.html(null);
 
     this.violins = this.violinGroup.selectAll("g").data(sumstat);
     this.violins
@@ -415,15 +415,14 @@ class Violin {
       )
       .on("mouseover", function(d) {
         let hasDataLink = d.dataExplorer || d.encyclopedia;
+        var num = (100 * [].concat.apply([], d).length) / self.data.length;
         self.tooltip.show(
           `<h5>Number of Exoplanets: ${[].concat.apply([], d).length}</h5>
-          <h5>Percentage of Exoplanets: ${(100 *
-            [].concat.apply([], d).length.toFixed(2)) /
-            self.data.length}%</h5>`
+          <h5>Percentage of Exoplanets: ${num.toFixed(2)}%</h5>`
         );
         d3.select(this)
-          .attr("stroke-width", 2)
-          .attr("r", 5);
+          .attr("stroke", "black")
+          .attr("stroke-width", 3);
         //.attr("opacity", 1)
       })
       .on("mouseout", function(d) {
