@@ -62,7 +62,7 @@ class Scatterplot {
     // List of variables in x-axis dropdown
     this.xLabels = self.dimensions.filter(function(dim) {
       return self.dimensionMetadata[dim].discrete === undefined;
-    });
+    }).sort();
 
     // List of variables the same in y-axis
     this.yLabels = this.xLabels;
@@ -111,17 +111,12 @@ class Scatterplot {
       )
       .style("text-anchor", "middle");
 
-    // let options = this.dimensions.filter(
-    //   function(dim) {
-    //     return self.dimensionMetadata[dim].order > 1;
-    //   }.bind(this)
-    // );
     let target = d3.select("#scatterplot");
     let dropdownX = new Dropdown(
       target,
       40,
       0,
-      300,
+      350,
       35,
       this.xLabels,
       "distance",
@@ -149,7 +144,7 @@ class Scatterplot {
       target,
       40,
       35,
-      300,
+      350,
       35,
       this.yLabels,
       "mass",
