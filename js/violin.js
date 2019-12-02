@@ -16,7 +16,7 @@ class Violin {
     this.width = 1050;
     this.height = 400;
 
-    // append the svg object to the body of the page
+    //  append the svg object to the body of the page
     this.svg = d3
       .select("#violin")
       .attr("width", this.width + this.margin.left + this.margin.right)
