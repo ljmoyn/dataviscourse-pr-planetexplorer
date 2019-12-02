@@ -115,7 +115,7 @@ class ParallelAxes {
     let axisDom = target.call(axis);
 
     //show tooltips when hovering over certain labels
-    if (dimension === "discoveryMethod" || dimension === "facility") {
+    if (this.dimensionMetadata[dimension].order < 2) {
       let self = {
         discoveryMethods: this.discoveryMethods,
         tooltip: this.tooltip,
@@ -130,35 +130,38 @@ class ParallelAxes {
 
         tickDom.classed("clickable", true)
 
-        tickDom
-          .on(
-            "mouseover",
-            function() {
-              let html = "<h5>" + tickLabel + "</h5>";
-              if (dimension === "discoveryMethod") {
-                let method = this.discoveryMethods.find(
-                  m => m.name === tickLabel
-                );
-                html += "<p>" + method.description + "</p>";
-              }
+        if(dimension === "discoveryMethod" || dimension === "facility" || dimension === "discoveryLocale"){
+          tickDom
+            .on(
+              "mouseover",
+              function() {
+                let html = "<h5>" + tickLabel + "</h5>";
+                if (dimension === "discoveryMethod") {
+                  let method = this.discoveryMethods.find(
+                    m => m.name === tickLabel
+                  );
+                  html += "<p>" + method.description + "</p>";
+                }
 
-              this.tooltip.show(html);
-            }.bind(self)
-          )
-          .on(
-            "mouseout",
-            function() {
-              this.tooltip.hide();
-            }.bind(self)
-          )
-          //when user clicks a label of a categorical axis, creates a brush around that label
-          .on("click", function(tickLabel, num, target) {
-            let brushGroup = d3.select(this.parentNode).select(".brush");
-            let dimension = brushGroup.datum();
-            let tickLocation = self.yScales[dimension](tickLabel);
-            let extent = [tickLocation - 5, tickLocation + 5];
-            brushGroup.call(self.yScales[dimension].brush.move, extent);
-          });
+                this.tooltip.show(html);
+              }.bind(self)
+            )
+            .on(
+              "mouseout",
+              function() {
+                this.tooltip.hide();
+              }.bind(self)
+            )
+        }
+
+        //when user clicks a label of a categorical axis, creates a brush around that label
+        tickDom.on("click", function(tickLabel, num, target) {
+          let brushGroup = d3.select(this.parentNode).select(".brush");
+          let dimension = brushGroup.datum();
+          let tickLocation = self.yScales[dimension](tickLabel);
+          let extent = [tickLocation - 5, tickLocation + 5];
+          brushGroup.call(self.yScales[dimension].brush.move, extent);
+        });
       });
     }
   }
