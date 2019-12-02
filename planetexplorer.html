@@ -16,6 +16,25 @@
   <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet" />
   <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 
+<!-- shepherd.js for storytelling -->
+
+<!-- <link rel="stylesheet" href="node_modules/tether/dist/css/tether-theme-arrows-dark.css"/>
+<script src="node_modules/tether/dist/js/tether.js"></script>
+
+<link rel="stylesheet" href="node_modules/shepherd.js/dist/css/shepherd.css"/>
+<script src="node_modules/shepherd.js/dist/js/shepherd.min.js"></script> -->
+<script src="shepherd/smoothscroll.js"></script>
+
+
+<link rel="stylesheet" href="shepherd/shepherd.css"/>
+<script src="shepherd/shepherd.js"></script>
+
+<link rel="stylesheet" href="shepherd/tether/tether.css"/>
+<script src="shepherd/tether/tether.js"></script>
+<link rel="stylesheet" href="shepherd/tether/tether-theme-basic.css"/>
+<!-- <link rel="stylesheet" href="shepherd/welcome.css"/> -->
+
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -49,10 +68,13 @@
         <li class="vertical-list-container right-border">
           <ul class="vertical-list">
             <li>
-              <h3>Walkthrough</h3>
+              <h3 id="walkHeader">Walkthrough</h3>
             </li>
-            <li><button type="button" class="btn btn-primary">Previous</button>
-                <button type="button" class="btn btn-primary">Next</button>
+            <li>
+              <!-- <button id="walkthrough" type="button" class="btn btn-primary">Begin</button> -->
+              <button id="previous" type="button" class="btn btn-primary">Previous</button>
+              <button id="next" type="button" class="btn btn-primary">Next</button>
+
             </li>
           </ul>
         </li>
@@ -78,6 +100,7 @@
   <script type="application/javascript" src="js/scatterplot.js"></script>
   <script type="application/javascript" src="js/violin.js"></script>
   <script type="application/javascript" src="js/tooltip.js"></script>
+  <script type="application/javascript" src="js/walkthrough.js"></script>
   <script type="application/javascript" src="js/script.js"></script>
 </body>
 

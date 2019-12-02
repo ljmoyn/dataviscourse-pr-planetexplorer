@@ -86,7 +86,7 @@ class Violin {
       .attr("id", "yLabel")
       .attr(
         "transform",
-        "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
+        "translate(-55" + " ," + this.height / 2 + ") " + "rotate(-90)"
       )
       .style("text-anchor", "middle");
 
@@ -200,69 +200,6 @@ class Violin {
           (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
       );
 
-    // // Add Y axis
-    // this.yScale = d3
-    //   .scaleLinear()
-    //   .domain([0, yMax])
-    //   .range([this.height, 0]);
-    // this.svg
-    //   .append("g")
-    //   .attr("id", "yAxis")
-    //   .call(d3.axisLeft(this.yScale));
-    // this.svg
-    //   .append("text")
-    //   .attr("id", "yLabel")
-    //   .attr(
-    //     "transform",
-    //     "translate(-45" + " ," + this.height / 2 + ") " + "rotate(-90)"
-    //   )
-    //   .style("text-anchor", "middle")
-    //   .text(
-    //     this.selectedY.name +
-    //       (this.selectedY.unit ? " (" + this.selectedY.unit + ")" : "")
-    //   );
-
-    // // Set y-axis
-    // this.svg
-    //   .select("#yAxis")
-    //   .selectAll("text")
-    //   .attr(
-    //     "transform",
-    //     "rotate(" +
-    //       (this.dimensionMetadata[this.selectedY.id].longLabels ? 30 : 0) +
-    //       ")"
-    //   )
-    //   .style("text-anchor", "start");
-    // this.svg
-    //   .select("#xLabel")
-    //   .text(
-    //     this.selectedX.name +
-    //       (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-    //   );
-
-    // this.xScale = d3
-    //   .scaleBand()
-    //   .domain(
-    //     d3.extent(
-    //       this.data,
-    //       function(datum) {
-    //         return +datum[this.selectedX.id];
-    //       }.bind(this)
-    //     )
-    //   )
-    //   .range([0, this.width]);
-
-    this.svg
-      .select("#xAxis")
-      .call(d3.axisBottom(this.xScale).tickFormat(d3.format(".3s")));
-
-    this.svg
-      .select("#xLabel")
-      .text(
-        this.selectedX.name +
-          (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-      );
-
     // Discrete ticks on x-axis
     this.xTickLabels = d3
       .map(
@@ -279,29 +216,18 @@ class Violin {
       .range([0, this.width])
       .domain(this.xTickLabels)
       .padding(0.05);
-    // this.svg
-    //   .append("g")
-    //   .attr("id", "xAxis")
-    //   .attr("transform", "translate(0," + this.height + ")");
-    // this.svg
-    //   .append("text")
-    //   .attr("id", "xLabel")
-    //   .attr(
-    //     "transform",
-    //     "translate(" +
-    //       this.width / 2 +
-    //       " ," +
-    //       (this.height + this.margin.top) +
-    //       ")" +
-    //       ""
-    //   )
-    //   .style("text-anchor", "middle")
-    //   .text(
-    //     this.selectedX.name +
-    //       (this.selectedX.unit ? " (" + this.selectedX.unit + ")" : "")
-    //   );
 
-    // Features of the histogram
+    let axis = null;
+    if(this.dimensionMetadata[this.selectedX.id].longLabels === true){
+      axis = d3.axisBottom(this.xScale).tickFormat(function(tickLabel){
+        return tickLabel.slice(0, 12);
+      });
+    }
+    else
+    {
+      axis = d3.axisBottom(this.xScale).tickFormat(d3.format(".3s"));
+    }
+
     let histogram = d3
       .histogram()
       .domain(this.yScale.domain())
@@ -361,7 +287,7 @@ class Violin {
     // Set x-axis
     this.svg
       .select("#xAxis")
-      .call(d3.axisBottom(this.xScale))
+      .call(axis)
       .selectAll("text")
       .attr(
         "transform",
@@ -438,6 +364,6 @@ class Violin {
   }
 
   story(storyPhase){
-    
+
   }
 }
