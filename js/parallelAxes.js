@@ -386,6 +386,7 @@ class ParallelAxes {
       .append("xhtml:div")
       .append("input")
       .attr("type", "checkbox")
+      .attr("checked", true)
       .attr("data-toggle", "toggle")
       .attr("data-style", "ios")
       .attr("data-on", "Hide Incomplete Data")
@@ -402,7 +403,7 @@ class ParallelAxes {
         this.toggleIncompleteData(true);
       }.bind(this)
     );
-    this.toggleIncompleteData();
+    //this.toggleIncompleteData();
   }
 
   toggleIncompleteData(withTransition) {
@@ -557,5 +558,44 @@ class ParallelAxes {
   clearFilter(completeData) {
     this.data = completeData;
     this.update();
+  }
+
+  story(storyPhase){
+    let self = this;
+    switch(storyPhase){
+      case 0:
+
+      case 1:
+        let dropdowns = ["facility", "discoveryMethod", "distance", "mass", "radius", "orbitalPeriod"]
+        d3.select("#incompleteDataToggle").attr("checked", true);
+        this.svg.selectAll("select").each(function(d,index){
+          d3.select(this).node().value = dropdowns[index];
+          d3.select(this).dispatch("change")
+        })
+        break;
+      case 2:
+        this.clearAllBrushes();
+        this.svg.selectAll(".brush").each(function(d,index){
+          if(index === 1)
+            d3.select(this).call(self.yScales["discoveryMethod"].brush.move, [-5,5]);
+        });
+        break;
+      case 4:
+        this.clearAllBrushes();
+        this.svg.selectAll(".brush").each(function(d,index){
+          if(index === 1)
+            d3.select(this).call(self.yScales["discoveryMethod"].brush.move, [103,113]);
+        });
+        break;
+      case 5:
+        this.clearAllBrushes();
+        this.svg.selectAll(".brush").each(function(d,index){
+          if(index === 0){
+            d3.select(this).call(self.yScales["discoveryMethod"].brush.move, [-5,14]);
+          }
+        });
+        break;
+      default:
+    }
   }
 }

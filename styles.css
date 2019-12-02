@@ -6,6 +6,10 @@
   margin-top: 90px
 }
 
+.highlightForTour {
+  /* background-color:blue; */
+}
+
 body {
   overflow-x: hidden;
 }
@@ -24,7 +28,7 @@ body {
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1030;
+  z-index: 10030;
 
   border-bottom: 1.75px solid lightslategray
 }
@@ -183,4 +187,50 @@ ul.vertical-list > li {
 
 li.vertical-list-container {
   vertical-align: top;
+}
+
+
+
+.shepherd-element .shepherd-arrow {
+  border-width: 0;
+  height: auto;
+  width: auto;
+}
+
+.shepherd-element .shepherd-arrow:after {
+  content: url('../assets/img/arrow.svg');
+  display: inline-block;
+}
+
+.shepherd-element.shepherd-element-attached-bottom.shepherd-element-attached-center .shepherd-arrow,
+.shepherd-element.shepherd-pinned-top .shepherd-arrow {
+  bottom: -35px;
+}
+
+.shepherd-element.shepherd-element-attached-bottom.shepherd-element-attached-center .shepherd-arrow:after,
+.shepherd-element.shepherd-pinned-top .shepherd-arrow:after {
+  transform: rotate(270deg);
+}
+
+.shepherd-element.shepherd-element-attached-top.shepherd-element-attached-center .shepherd-arrow {
+  top: -35px;
+}
+
+.shepherd-element.shepherd-element-attached-top.shepherd-element-attached-center .shepherd-arrow:after {
+  transform: rotate(90deg);
+}
+
+.shepherd-element.shepherd-element-attached-middle.shepherd-element-attached-right .shepherd-arrow,
+.shepherd-element.shepherd-pinned-left .shepherd-arrow {
+  right: -35px;
+}
+
+.shepherd-element.shepherd-element-attached-middle.shepherd-element-attached-right .shepherd-arrow:after,
+.shepherd-element.shepherd-pinned-left .shepherd-arrow:after {
+  transform: rotate(180deg);
+}
+
+.shepherd-element.shepherd-element-attached-middle.shepherd-element-attached-left .shepherd-arrow,
+.shepherd-element.shepherd-pinned-right .shepherd-arrow {
+  left: -35px;
 }

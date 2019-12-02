@@ -41,17 +41,20 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     dimensionMetadata = {
       mass: {
         unit: "Earth Masses",
-        order: 3
+        order: 3,
+        name: "Mass"
       },
       discoveryMethod: {
         longLabels: true,
         order: 1,
-        discrete: true
+        discrete: true,
+        name: "Discovery Method"
       },
       facility: {
         longLabels: true,
         order: 0,
-        discrete: true
+        discrete: true,
+        name: "Facility"
       },
       name: {
         longLabels: true,
@@ -60,23 +63,28 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       },
       radius: {
         unit: "Earth Radius",
-        order: 4
+        order: 4,
+        name: "Radius"
       },
       year: {
         order: -1,
-        discrete: true
+        discrete: true,
+        name: "Year"
       },
       distance: {
         unit: "Parsecs",
-        order: 2
+        order: 2,
+        name: "Distance"
       },
       density: {
         order: -1,
-        unit: "g/cm^3"
+        unit: "g/cm^3",
+        name: "Density"
       },
       numPlanetsInSystem: {
         order: -1,
-        discrete: true
+        discrete: true,
+        name: "Number of Planets In System"
       },
       stellarName: {
         longLabels: true,
@@ -85,38 +93,47 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       },
       stellarMass: {
         order: -1,
-        unit: "Solar Mass"
+        unit: "Solar Mass",
+        name: "Stellar Mass"
       },
       stellarRadius: {
         order: -1,
-        unit: "Solar Radius"
+        unit: "Solar Radius",
+        name: "Stellar Radius"
       },
       stellarTemperature: {
         order: -1,
-        unit: "Kelvin"
+        unit: "Kelvin",
+        name: "Stellar Temperature"
       },
       orbitalPeriod: {
         order: 5,
-        unit: "days"
+        unit: "days",
+        name: "Orbital Period"
       },
       orbitalSemimajorAxis: {
         order: -1,
-        unit: "AU"
+        unit: "AU",
+        name: "Orbital Semimajor Axis"
       },
       eccentricity: {
-        order: -1
+        order: -1,
+        name: "Eccentricity"
       },
       inclination: {
         order: -1,
-        unit: "degrees"
+        unit: "degrees",
+        name: "Inclination"
       },
       rightAscension: {
         order: -1,
-        unit: "degrees"
+        unit: "degrees",
+        name: "Right Ascension"
       },
       declination: {
         order: -1,
-        unit: "degrees"
+        unit: "degrees",
+        name: "Declination"
       },
       discoveryReference: {
         order: -1,
@@ -124,7 +141,8 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       },
       discoveryLocale: {
         order: -1,
-        discrete: true
+        discrete: true,
+        name: "Discovery Locale"
       },
       discoveryTelescope: {
         order: -1,
@@ -144,7 +162,13 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       }
     };
 
+    let storyTooltip1 = new Tooltip();
+    let storyTooltip2 = new Tooltip();
+    let storyTooltip3 = new Tooltip();
     let tooltip = new Tooltip();
+
+    let storyPhase = 0;
+
     let scatterplot = new Scatterplot(data, dimensionMetadata, tooltip);
     let violin = new Violin(data, dimensionMetadata, tooltip);
     let parallelAxes = new ParallelAxes(
@@ -179,6 +203,71 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
     d3.select("#clearFilter").on("click", function() {
       parallelAxes.clearFilter(data);
       scatterplot.clearFilter(data);
+    });
+
+    let updateStory = function(storyPhase){
+
+      storyTooltip1.hide();
+      storyTooltip2.hide();
+      storyTooltip3.hide();
+
+      switch(storyPhase){
+        case 1:
+          storyTooltip1.show(`<h5>Parallel Coordinates</h5>This plot allows you to compare multiple data attributes at once.
+            The data can be selected using the dropdowns at the top of each axis. The two leftmost axes allow for discrete/categorical data, while the rest are continuous<br/><br/>
+            Lines can be selected by clicking and dragging along an axis, or clicking on a categorical axis label. Hovering over the labels for discovery methods will provide a detailed description of each one.<br/><br/>
+            We only have partial information on most planets. There is a toggle at the bottom of the plot which can be used to hide lines for planets with incomplete data.`, 500, 200)
+          storyTooltip2.show(`<h5>Violin Plots</h5>This plot takes categorical/discrete data on the x axis, and shows its distribution in terms of the chosen continuous data. The plots are ordered from left to right in terms of the total number of planets`, 500, 1000)
+          storyTooltip3.show(`<h5>Units</h5>Some of the units used by astrophysicists may be unfamiliar to the user.
+              <b>Astronomical Unit (AU):</b>Roughly the distance from the earth to the sun. 1.496e+11 Meters <br/>
+              <b>Parsec:</b> Defined as the distance at which one astronomical unit subtends an angle of one arcsecond. 3.26 Light Years.<br/>
+              <b>Earth Mass:</b> 5.972e+24 kg<br/>
+              <b>Solar Mass:</b> 2e+30 kg`, 1000, 200)
+
+          break;
+        case 2:
+          window.scrollTo(0,0)
+          storyTooltip1.show(`<h5>The Dominant Method</h5> In terms of total number of planets, Transit is by far the most successful method. It accounts for 76% of everything in the archive. Most of the remainder were discovered by Radial Velocity. Every remaining method combined accounts for only 4.3% of planets.`, 500, 200)
+          break;
+        case 3:
+          window.scrollTo(0,window.outerHeight)
+          storyTooltip1.show(`<h5>The Strength of Microlensing</h5> When comparing the distances of planets discovered with each method, Microlensing stands out. While most of the others are limited to about 2000 parsecs of range, Microlensing has been used to find planets that are over 8000 parsecs away. For reference, that is about the same distance as the center of the galaxy.`, 500, 1000)
+          break;
+        case 4:
+          window.scrollTo(0,0)
+          storyTooltip1.show(`<h5>A Disadvantage of Microlensing</h5> As previously mentioned, Microlensing is used much less frequently than some other methods. This is largely because it requires a precise alignment between earth, a massive lensing object, and a target, which is extremely rare. <br/><br/>
+            When comparing the the data, one thing to note is that we don't know the radius of ANY planets discovered by microlensing. This makes sense because it does not rely on light being blocked by the planet, unlike other methods.`, 500, 200)
+          break;
+        case 5:
+          window.scrollTo(0,0)
+          storyTooltip1.show(`<h5>Facilities</h5>NASA's Kepler space telescope has discovered about 57% of all exoplanets since it was launched in 2009. The second most prolific facility, K2 with 9.6%, is actually just the kepler telescope after it received a new mission name.<br/></br>
+          This success makes sense, as kepler was specifically designed as an exoplanet hunter.`, 500, 200)
+          break;
+        default:
+      }
+      parallelAxes.story(storyPhase);
+      violin.story(storyPhase);
+    }
+
+    d3.select("#next").on("click", function(){
+      if(storyPhase < 5)
+        storyPhase += 1;
+      else
+        storyPhase = 0
+
+      d3.select("#walkHeader").html(storyPhase === 0 ? "Walkthrough" : "Walkthrough (" + storyPhase + "/5)")
+
+      updateStory(storyPhase);
+    });
+
+    d3.select("#previous").on("click", function(){
+      if(storyPhase > 0){
+        storyPhase -= 1;
+
+        d3.select("#walkHeader").html(storyPhase === 0 ? "Walkthrough" : "Walkthrough (" + storyPhase + "/5)")
+
+        updateStory(storyPhase);
+      }
     });
 
     //GenerateDiscoveryMethodsJSON(data);

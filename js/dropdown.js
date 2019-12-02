@@ -26,8 +26,7 @@ class Dropdown {
       .append("option")
       .text(function(dim) {
         let dimensionUnit = metadata[dim].unit;
-        let dimensionName = dim.charAt(0).toUpperCase() + dim.slice(1);
-        return dimensionName + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
+        return metadata[dim].name + (dimensionUnit ? " (" + dimensionUnit + ")" : "");
       })
       .attr("value", function(dim) {
         return dim;

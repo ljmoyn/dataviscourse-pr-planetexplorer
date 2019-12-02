@@ -117,7 +117,7 @@ class Violin {
       target,
       40,
       0,
-      300,
+      350,
       35,
       this.xLabels,
       this.selectedX.id,
@@ -435,5 +435,9 @@ class Violin {
       .merge(this.violins);
 
     console.log(sumstat);
+  }
+
+  story(storyPhase){
+    
   }
 }

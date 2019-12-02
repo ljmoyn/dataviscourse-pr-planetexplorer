@@ -7,13 +7,13 @@ class Tooltip {
       .style("opacity", 0);
   }
 
-  show(html){
+  show(html, left, top){
     this.div.transition()
       .duration(200)
       .style("opacity", 0.9);
     this.div.html(html)
-      .style("left", d3.event.pageX + 28 + "px")
-      .style("top", d3.event.pageY - 28 + "px");
+      .style("left", (left ? left : (d3.event.pageX + 28)) + "px")
+      .style("top", (top ? top : (d3.event.pageY - 28)) + "px");
   }
 
   hide(){
