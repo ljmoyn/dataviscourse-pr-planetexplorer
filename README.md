@@ -1,7 +1,7 @@
 # dataviscourse-pr-planetexplorer
 
 Project Website: https://ljmoyn.github.io/dataviscourse-pr-planetexplorer/
-Demo Video:
+Demo Video: https://www.youtube.com/watch?v=YRAFdPMDXC4
 
 - All of our javascript files are in the js folder. The main file is script.js,
 and the others are classes for various views.
