@@ -162,9 +162,9 @@ d3.csv("data/confirmed-planets.csv").then(rawData => {
       }
     };
 
-    let storyTooltip1 = new Tooltip();
-    let storyTooltip2 = new Tooltip();
-    let storyTooltip3 = new Tooltip();
+    let storyTooltip1 = new Tooltip("storyTooltip");
+    let storyTooltip2 = new Tooltip("storyTooltip");
+    let storyTooltip3 = new Tooltip("storyTooltip");
     let tooltip = new Tooltip();
 
     let storyPhase = 0;

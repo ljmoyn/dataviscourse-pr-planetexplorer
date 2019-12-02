@@ -51,6 +51,11 @@ div.tooltip {
   max-width: 400px;
 }
 
+div.tooltip.storyTooltip {
+  border: 3px solid black;
+  background: lightyellow;
+}
+
 .clickable {
   cursor: pointer;
 }
